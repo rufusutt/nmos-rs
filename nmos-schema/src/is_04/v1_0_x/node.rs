@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Service {
+pub struct NodeService {
     href: String,
     ty: String,
 }
@@ -15,5 +15,5 @@ pub struct Node {
     pub href: String,
     pub hostname: String,
     pub caps: Option<()>,
-    pub services: Vec<Service>,
+    pub services: Vec<NodeService>,
 }
