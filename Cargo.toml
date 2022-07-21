@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
-    "nmos-schema",
-    "nmos-node",
+    "model",
+    "schema",
+    "node",
 ]

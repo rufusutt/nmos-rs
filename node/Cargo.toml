@@ -1,0 +1,20 @@
+[package]
+name = "nmos-rs-node"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+nmos-rs-schema = { path = "../schema" }
+nmos-rs-model = { path = "../model" }
+async-trait = "0.1"
+futures = "0.3"
+hyper = { version = "0.14", features = ["http1", "client", "server", "runtime"] }
+serde = "1"
+serde_json = "1"
+tokio = { version = "1", features = ["sync"] }
+tracing = { version = "0.1", features = ["log"] }
+zeroconf = "0.10"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+tracing-subscriber = "0.3"
