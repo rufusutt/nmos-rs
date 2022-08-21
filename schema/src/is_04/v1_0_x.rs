@@ -15,16 +15,18 @@ schemafy::schemafy!(root: SourceJson "schemas/source.json");
 schemafy::schemafy!(root: SourcesJson "schemas/sources.json");
 
 pub mod nodeapi {
-    use super::SenderJson;
     use serde::{Deserialize, Serialize};
+
+    use super::SenderJson;
 
     schemafy::schemafy!(root: BaseJson "schemas/nodeapi-base.json");
     schemafy::schemafy!(root: ReceiverTargetJson "schemas/nodeapi-receiver-target.json");
 }
 
 pub mod queryapi {
-    use super::{DeviceJson, FlowJson, NodeJson, ReceiverJson, SenderJson, SourceJson};
     use serde::{Deserialize, Serialize};
+
+    use super::{DeviceJson, FlowJson, NodeJson, ReceiverJson, SenderJson, SourceJson};
 
     type QueryapiSubscriptionResponseJson = SubscriptionResponseJson;
 
@@ -36,8 +38,9 @@ pub mod queryapi {
 }
 
 pub mod registrationapi {
-    use super::{DeviceJson, FlowJson, NodeJson, ReceiverJson, SenderJson, SourceJson};
     use serde::{Deserialize, Serialize};
+
+    use super::{DeviceJson, FlowJson, NodeJson, ReceiverJson, SenderJson, SourceJson};
 
     schemafy::schemafy!(root: BaseJson "schemas/registrationapi-base.json");
     schemafy::schemafy!(root: HealthResponseJson "schemas/registrationapi-health-response.json");

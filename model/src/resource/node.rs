@@ -1,9 +1,8 @@
 use nmos_rs_schema::is_04;
 use uuid::Uuid;
 
-use crate::tai::TaiTime;
-
 use super::Resource;
+use crate::tai::TaiTime;
 
 #[derive(Debug)]
 pub struct NodeService {

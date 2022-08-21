@@ -1,9 +1,7 @@
 use std::error::Error as StdError;
-use std::fmt::{Error as FmtError, self};
+use std::fmt::{self, Error as FmtError};
 use std::io::Error as IoError;
 use std::result::Result as StdResult;
-
-use hyper::Error as HyperError;
 
 pub type Result<T> = StdResult<T, Error>;
 
@@ -11,7 +9,6 @@ pub type Result<T> = StdResult<T, Error>;
 pub enum Error {
     Format(FmtError),
     Io(IoError),
-    Hyper(HyperError),
 }
 
 impl From<FmtError> for Error {
@@ -26,18 +23,11 @@ impl From<IoError> for Error {
     }
 }
 
-impl From<HyperError> for Error {
-    fn from(e: HyperError) -> Self {
-        Error::Hyper(e)
-    }
-}
-
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Error::Format(e) => fmt::Display::fmt(&e, f),
             Error::Io(e) => fmt::Display::fmt(&e, f),
-            Error::Hyper(e) => fmt::Display::fmt(&e, f),
         }
     }
 }
@@ -47,7 +37,6 @@ impl StdError for Error {
         match self {
             Error::Format(e) => Some(e),
             Error::Io(e) => Some(e),
-            Error::Hyper(e) => Some(e),
         }
     }
 }

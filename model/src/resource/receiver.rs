@@ -3,9 +3,8 @@ use std::collections::BTreeMap;
 use nmos_rs_schema::is_04;
 use uuid::Uuid;
 
-use crate::tai::TaiTime;
-
 use super::{Device, Format, Resource, Transport};
+use crate::tai::TaiTime;
 
 #[derive(Debug)]
 pub struct Receiver {

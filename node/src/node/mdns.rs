@@ -1,7 +1,6 @@
 use std::{any::Any, sync::Arc, time::Duration};
 
-use futures::{channel::oneshot::{channel, Receiver, Sender}, executor::block_on};
-
+use futures::channel::oneshot::{channel, Receiver, Sender};
 use tracing::info;
 use zeroconf::{
     browser::TMdnsBrowser, event_loop::TEventLoop, service::TMdnsService, txt_record::TTxtRecord,

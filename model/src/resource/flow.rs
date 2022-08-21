@@ -3,9 +3,8 @@ use std::collections::BTreeMap;
 use nmos_rs_schema::is_04;
 use uuid::Uuid;
 
-use crate::tai::TaiTime;
-
 use super::{Format, Resource, Source};
+use crate::tai::TaiTime;
 
 #[derive(Debug)]
 pub struct Flow {

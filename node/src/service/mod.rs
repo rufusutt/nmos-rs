@@ -1,121 +1,89 @@
-mod node;
-mod response;
+mod error;
+mod node_api;
 
+use std::convert::Infallible;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::task::Context;
 use std::task::Poll;
 
+use axum::{
+    body::Body, extract::OriginalUri, handler::Handler, http::Request, http::StatusCode,
+    response::Response, routing::get, Extension, Json, Router,
+};
+use error::ServiceError;
 use futures::Future;
-use hyper::header::CONTENT_TYPE;
-use hyper::{service::Service, Body, Method, Request, Response, StatusCode};
-use tracing::{span, Level};
-
 use nmos_rs_model::Model;
+use serde_json::json;
+use tower::Service;
 
-pub struct MakeNodeServce {
-    model: Arc<Model>,
+use self::node_api::{
+    get_device, get_devices, get_flow, get_flows, get_receiver, get_receivers, get_self,
+    get_sender, get_senders, get_source, get_sources,
+};
+
+#[derive(Debug, Clone)]
+pub struct NmosService {
+    router: Router,
 }
 
-impl MakeNodeServce {
+impl NmosService {
     pub fn new(model: Arc<Model>) -> Self {
-        Self { model }
+        let router = Router::new()
+            .route(
+                "/",
+                get(|| async { Json(json!(["x-manifest/", "x-nmos/"])) }),
+            )
+            .route("/x-nmos/", get(|| async { Json(json!(["node/"])) }))
+            .route("/x-nmos/node/", get(|| async { Json(json!(["v1.0/"])) }))
+            .route(
+                "/x-nmos/node/v1.0/",
+                get(|| async {
+                    Json(json!([
+                        "devices/",
+                        "flows/",
+                        "receivers/",
+                        "self/",
+                        "senders/",
+                        "sources/"
+                    ]))
+                }),
+            )
+            .route("/x-nmos/node/v1.0/self", get(get_self))
+            .route("/x-nmos/node/v1.0/devices/", get(get_devices))
+            .route("/x-nmos/node/v1.0/devices/:id", get(get_device))
+            .route("/x-nmos/node/v1.0/receivers/", get(get_receivers))
+            .route("/x-nmos/node/v1.0/receivers/:id", get(get_receiver))
+            .route("/x-nmos/node/v1.0/senders/", get(get_senders))
+            .route("/x-nmos/node/v1.0/senders/:id", get(get_sender))
+            .route("/x-nmos/node/v1.0/sources/", get(get_sources))
+            .route("/x-nmos/node/v1.0/sources/:id", get(get_source))
+            .route("/x-nmos/node/v1.0/flows/", get(get_flows))
+            .route("/x-nmos/node/v1.0/flows/:id", get(get_flow))
+            .fallback(fallback_handler.into_service())
+            .layer(Extension(model));
+
+        Self { router }
     }
 }
 
-impl<T> Service<T> for MakeNodeServce {
-    type Response = NodeService;
-    type Error = std::io::Error;
-    type Future = futures::future::Ready<Result<Self::Response, Self::Error>>;
-
-    fn poll_ready(&mut self, _: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        Poll::Ready(Ok(()))
-    }
-
-    fn call(&mut self, _: T) -> Self::Future {
-        futures::future::ok(NodeService {
-            model: self.model.clone(),
-        })
-    }
+async fn fallback_handler(OriginalUri(uri): OriginalUri) -> ServiceError {
+    ServiceError::new(
+        StatusCode::NOT_FOUND,
+        Some(format!("No such path: {}", uri)),
+    )
 }
 
-pub struct NodeService {
-    model: Arc<Model>,
-}
-
-impl NodeService {
-    async fn respond(
-        req: Request<Body>,
-        model: Arc<Model>,
-    ) -> Result<Response<Body>, hyper::Error> {
-        // Remove leading slash
-        let mut path = req
-            .uri()
-            .path()
-            .split_once('/')
-            .unwrap_or(("", req.uri().path()))
-            .1
-            .to_owned();
-
-        // Remove trailing slash if present
-        if let Some('/') = path.chars().last() {
-            path.pop();
-        }
-
-        // Split path string by remaining slashes
-        let mut split_path = path.split('/');
-
-        // Iterate through split path
-        match (split_path.next(), req.method()) {
-            // nmos request
-            (Some("x-nmos"), _) => match (split_path.next(), req.method()) {
-                // Node API
-                (Some("node"), _) => node::respond(req, split_path, model).await,
-                // Unknown path
-                (Some(_), _) => response::not_found(),
-                // GET x-nmos root
-                (None, &Method::GET) => {
-                    let body = Body::from(r#"["node/"]"#);
-
-                    Ok(Response::builder()
-                        .status(StatusCode::OK)
-                        .header(CONTENT_TYPE, "application/json")
-                        .body(body)
-                        .unwrap())
-                }
-                // Method not allowed
-                (None, _) => response::method_not_allowed(),
-            },
-            // Unknown path
-            (Some(_), _) => response::not_found(),
-            // GET root
-            (None, &Method::GET) => {
-                let body = Body::from(r#"["x-manifest/","x-nmos/"]"#);
-
-                Ok(Response::builder()
-                    .status(StatusCode::OK)
-                    .header(CONTENT_TYPE, "application/json")
-                    .body(body)
-                    .unwrap())
-            }
-            // Method not allowed
-            (None, _) => response::method_not_allowed(),
-        }
-    }
-}
-
-impl Service<Request<Body>> for NodeService {
-    type Response = Response<Body>;
-    type Error = hyper::Error;
+impl Service<Request<Body>> for NmosService {
+    type Response = Response;
+    type Error = Infallible;
     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
 
-    fn poll_ready(&mut self, _: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        Poll::Ready(Ok(()))
+    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        self.router.poll_ready(cx)
     }
 
     fn call(&mut self, req: Request<Body>) -> Self::Future {
-        let span = span!(Level::INFO, "req");
-        let _guard = span.enter();
-        Box::pin(Self::respond(req, self.model.clone()))
+        Box::pin(self.router.call(req))
     }
 }

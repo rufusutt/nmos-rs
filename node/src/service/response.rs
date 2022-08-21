@@ -1,5 +1,3 @@
-use hyper::{header::CONTENT_TYPE, Body, Response, StatusCode};
-
 use nmos_rs_schema::is_04;
 
 pub fn json<S: serde::Serialize>(json: &S) -> Response<Body> {

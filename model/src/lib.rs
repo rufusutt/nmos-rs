@@ -1,10 +1,9 @@
 pub mod resource;
 pub mod tai;
 
-use resource::{Device, Flow, Node, Receiver, Sender, Source};
-
 use std::collections::HashMap;
 
+use resource::{Device, Flow, Node, Receiver, Sender, Source};
 use tokio::sync::{RwLock, RwLockReadGuard};
 use uuid::Uuid;
 

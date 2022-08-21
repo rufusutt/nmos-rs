@@ -1,21 +1,22 @@
 mod event_handler;
 mod mdns;
 
-pub use event_handler::EventHandler;
-use mdns::MdnsContext;
-use tokio::sync::mpsc;
-use tracing::info;
-
-use nmos_rs_model::{resource, Model};
-
-use crate::{error::Result, service::MakeNodeServce};
-
-use hyper::client::HttpConnector;
-use hyper::{Client, Server};
-
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
+
+use axum::http::Method;
+use axum::Server;
+pub use event_handler::EventHandler;
+use mdns::MdnsContext;
+use nmos_rs_model::{resource, Model};
+use tokio::sync::mpsc;
+use tower::make::Shared;
+use tower::ServiceBuilder;
+use tower_http::cors::{self, CorsLayer};
+use tracing::info;
+
+use crate::{error::Result, service::NmosService};
 
 pub struct NodeBuilder {
     event_handler: Option<Arc<dyn EventHandler>>,
@@ -58,23 +59,21 @@ impl NodeBuilder {
         // Wrap model in Arc
         let model = Arc::new(model);
 
-        let make_service = MakeNodeServce::new(model.clone());
-
-        // Create client
-        let client = Client::new();
+        // Make service
+        let service = NmosService::new(model.clone());
 
         Node {
             event_handler: self.event_handler,
-            make_service,
-            client,
+            model,
+            service,
         }
     }
 }
 
 pub struct Node {
     event_handler: Option<Arc<dyn EventHandler>>,
-    make_service: MakeNodeServce,
-    client: Client<HttpConnector>,
+    model: Arc<Model>,
+    service: NmosService,
 }
 
 impl Node {
@@ -107,8 +106,21 @@ impl Node {
         let mdns_receivers = rx.recv().await;
 
         // Create server
-        let addr = ([127, 0, 0, 1], 3000).into();
-        let server = Server::bind(&addr).serve(self.make_service).await;
+        let app = ServiceBuilder::new()
+            .layer(
+                CorsLayer::new()
+                    .allow_methods([Method::GET, Method::POST])
+                    .allow_origin(cors::Any),
+            )
+            .service(self.service);
+
+        let addr = ([0, 0, 0, 0], 3000).into();
+        Server::bind(&addr)
+            .serve(Shared::new(app))
+            .await
+            .expect("Server error");
+
+        // service.await;
 
         // let mut mdns_receivers = None;
 

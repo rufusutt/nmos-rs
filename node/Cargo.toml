@@ -7,12 +7,15 @@ edition = "2021"
 nmos-rs-schema = { path = "../schema" }
 nmos-rs-model = { path = "../model" }
 async-trait = "0.1"
+axum = { version = "0.5", default-features = false, features = ["http1", "json", "original-uri", "tower-log"] }
 futures = "0.3"
-hyper = { version = "0.14", features = ["http1", "client", "server", "runtime"] }
 serde = "1"
 serde_json = "1"
 tokio = { version = "1", features = ["sync"] }
+tower = { version = "0.4", features = ["make"] }
+tower-http = { version = "0.3", features = ["cors"] }
 tracing = { version = "0.1", features = ["log"] }
+uuid = { version = "1", features = ["serde"] }
 zeroconf = "0.10"
 
 [dev-dependencies]

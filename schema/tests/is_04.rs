@@ -1,4 +1,4 @@
-use nmos_rs_schema::is_04::v1_0_x::{FlowsJson};
+use nmos_rs_schema::is_04::v1_0_x::FlowsJson;
 
 #[test]
 fn parse_flows() {
