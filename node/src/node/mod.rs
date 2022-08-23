@@ -16,7 +16,7 @@ use tower::ServiceBuilder;
 use tower_http::cors::{self, CorsLayer};
 use tracing::info;
 
-use crate::{error::Result, service::NmosService};
+use crate::{error::Result, node::mdns::MdnsConfig, service::NmosService};
 
 pub struct NodeBuilder {
     event_handler: Option<Arc<dyn EventHandler>>,
@@ -84,15 +84,12 @@ impl Node {
     pub async fn start(self) -> Result<()> {
         info!("Starting nmos-rs node");
 
-        // Channel to get receivers back from thread
-        let (tx, mut rx) = mpsc::channel(1);
+        // Channel for receiving MDNS events
+        let (tx, mut rx) = mpsc::unbounded_channel();
 
         let mdns_thread = thread::spawn(move || {
-            let mut context = MdnsContext::new();
-
-            // Get receivers
-            let receivers = context.receivers();
-            tx.blocking_send(receivers).unwrap();
+            // Create context
+            let mut context = MdnsContext::new(&MdnsConfig {}, tx);
 
             let poller = context.start();
 
@@ -103,7 +100,9 @@ impl Node {
             }
         });
 
-        let mdns_receivers = rx.recv().await;
+        while let Some(rx) = rx.recv().await {
+            dbg!(rx);
+        }
 
         // Create server
         let app = ServiceBuilder::new()
@@ -120,59 +119,6 @@ impl Node {
             .await
             .expect("Server error");
 
-        // service.await;
-
-        // let mut mdns_receivers = None;
-
-        // thread::spawn(|| {
-        //     let (mdns_context, mdns_receivers) = MdnsContext::new();
-
-        //     mdns_context.poll();
-        // });
-
-        // let t = mdns_receivers.register_rx.recv().await;
-
-        // // Create browser
-        // let mut browser = MdnsBrowser::new(ServiceType::new("nmos-register", "tcp").unwrap());
-
-        // browser.set_service_discovered_callback(Box::new(Self::on_service_discovered));
-        // browser.set_context(Box::new(self.mdns_context.clone()));
-
-        // let event_loop = browser.browse_services().unwrap();
-
-        // info!("Discovering registries");
-
-        // Scan for duration
-        // let start = Instant::now();
-        // loop {
-        //     event_loop.poll(Duration::from_secs(0)).unwrap();
-        //     if Instant::now().duration_since(start) > Duration::from_secs(1) {
-        //         break;
-        //     }
-        // }
-
-        // let context = self.mdns_context.lock().unwrap();
-        // let service = context.services.first().expect("No services");
-        // let uri = Uri::builder()
-        //     .scheme("http")
-        //     .authority(format!("{}:{}", service.address(), service.port()))
-        //     .path_and_query("/x-nmos/registration/v1.0")
-        //     .build()
-        //     .unwrap();
-
-        // let res = self.client.get(uri).await?;
-
-        // // res.body();
-
-        // let buf = hyper::body::to_bytes(res).await?;
-
-        // let base: RegistrationApiBase = serde_json::from_slice(&buf).unwrap();
-
-        // dbg!(base);
-
-        // let server = &mut self.server;
-
-        // server.await.map_err(|e| e.into())
         Ok(())
     }
 }

@@ -1,24 +1,34 @@
 use std::{any::Any, sync::Arc, time::Duration};
 
-use futures::channel::oneshot::{channel, Receiver, Sender};
+use tokio::sync::mpsc::{self, UnboundedSender};
 use tracing::info;
 use zeroconf::{
     browser::TMdnsBrowser, event_loop::TEventLoop, service::TMdnsService, txt_record::TTxtRecord,
-    EventLoop, MdnsBrowser, MdnsService, ServiceDiscovery, ServiceType, TxtRecord,
+    EventLoop, MdnsBrowser, MdnsService, ServiceDiscovery, ServiceRegistration, ServiceType,
+    TxtRecord,
 };
+
+pub struct MdnsConfig {}
 
 #[derive(Debug)]
 pub struct MdnsContext {
     // Browsers and services
     register_browser: Option<MdnsBrowser>,
     node_service: Option<MdnsService>,
-    // Receivers
-    receivers: Arc<MdnsReceivers>,
+    query_service: Option<MdnsService>,
 }
 
 #[derive(Debug)]
-pub struct MdnsReceivers {
-    pub register_rx: Receiver<ServiceDiscovery>,
+pub enum NmosMdnsService {
+    Node,
+    Registration,
+    Query,
+}
+
+#[derive(Debug)]
+pub enum NmosMdnsEvent {
+    Discovery(NmosMdnsService, zeroconf::Result<ServiceDiscovery>),
+    Registration(NmosMdnsService, zeroconf::Result<ServiceRegistration>),
 }
 
 pub struct MdnsPoller<'a> {
@@ -27,53 +37,63 @@ pub struct MdnsPoller<'a> {
 
 impl MdnsContext {
     fn on_service_discovered(
+        service: NmosMdnsService,
         result: zeroconf::Result<ServiceDiscovery>,
         context: Option<Arc<dyn Any>>,
     ) {
-        // Get discovery
-        let sd = match result {
-            Ok(sd) => sd,
-            Err(_) => return,
-        };
-
-        info!("Registry discovered: {:?}", sd);
-
         // Cast context
         let tx = context
             .as_ref()
-            .expect("Expected MdnsContext")
-            .downcast_ref::<Sender<ServiceDiscovery>>()
-            .unwrap()
-            .clone();
+            .expect("Missing context")
+            .downcast_ref::<UnboundedSender<NmosMdnsEvent>>()
+            .unwrap();
 
-        // block_on(tx.send(sd));
+        tx.send(NmosMdnsEvent::Discovery(service, result))
+            .expect("Unable to send MDNS event");
     }
 
-    pub fn new() -> MdnsContext {
+    fn register_callback(
+        service: NmosMdnsService,
+        result: zeroconf::Result<ServiceRegistration>,
+        context: Option<Arc<dyn Any>>,
+    ) {
+        // Cast context
+        let tx = context
+            .as_ref()
+            .expect("Missing context")
+            .downcast_ref::<UnboundedSender<NmosMdnsEvent>>()
+            .unwrap();
+
+        tx.send(NmosMdnsEvent::Registration(service, result))
+            .expect("Unable to send MDNS event");
+    }
+
+    pub fn new(config: &MdnsConfig, tx: mpsc::UnboundedSender<NmosMdnsEvent>) -> MdnsContext {
+        // Create registration browser
         let mut register_browser =
             MdnsBrowser::new(ServiceType::new("nmos-register", "tcp").unwrap());
 
-        let (tx, register_rx): (Sender<ServiceDiscovery>, Receiver<ServiceDiscovery>) = channel();
-        register_browser.set_service_discovered_callback(Box::new(Self::on_service_discovered));
-        register_browser.set_context(Box::new(tx));
+        register_browser.set_context(Box::new(tx.clone()));
+        register_browser.set_service_discovered_callback(Box::new(|r, c| {
+            Self::on_service_discovered(NmosMdnsService::Registration, r, c)
+        }));
 
+        // Create node service
         let mut node_service =
             MdnsService::new(ServiceType::new("nmos-node", "tcp").unwrap(), 3000);
         let txt_record = TxtRecord::new();
 
         node_service.set_txt_record(txt_record);
-
-        let receivers = MdnsReceivers { register_rx };
+        node_service.set_context(Box::new(tx));
+        node_service.set_registered_callback(Box::new(|r, c| {
+            Self::register_callback(NmosMdnsService::Node, r, c)
+        }));
 
         MdnsContext {
             register_browser: Some(register_browser),
             node_service: None,
-            receivers: Arc::new(receivers),
+            query_service: None,
         }
-    }
-
-    pub fn receivers(&self) -> Arc<MdnsReceivers> {
-        return self.receivers.clone();
     }
 
     pub fn start<'a>(&'a mut self) -> MdnsPoller {
