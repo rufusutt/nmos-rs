@@ -49,7 +49,7 @@ impl NmosMdnsRegistry {
             let port = discovery.port();
 
             // Use std to form valid address port combination
-            let address = match IpAddr::from_str(&address) {
+            let address = match IpAddr::from_str(address) {
                 Ok(addr) => addr,
                 Err(_) => return None,
             };
@@ -71,11 +71,8 @@ impl NmosMdnsRegistry {
             };
 
             // Parse api_ver
-            let api_ver: Vec<APIVersion> = api_ver
-                .split(',')
-                .map(|v| APIVersion::from_str(v))
-                .flatten()
-                .collect();
+            let api_ver: Vec<APIVersion> =
+                api_ver.split(',').flat_map(APIVersion::from_str).collect();
 
             // Parse api_auth
             let api_auth = match api_auth.parse::<bool>() {
@@ -97,7 +94,7 @@ impl NmosMdnsRegistry {
                 uri,
             })
         } else {
-            return None;
+            None
         }
     }
 }
@@ -115,7 +112,6 @@ impl PartialOrd for NmosMdnsRegistry {
     }
 }
 
-#[derive(Debug)]
 pub struct MdnsContext {
     // Browsers and services
     register_browser: Option<MdnsBrowser>,
@@ -211,7 +207,7 @@ impl MdnsContext {
         }
     }
 
-    pub fn start<'a>(&'a mut self) -> MdnsPoller {
+    pub fn start(&mut self) -> MdnsPoller {
         let mut event_loops = Vec::new();
 
         if let Some(register_browser) = &mut self.register_browser {

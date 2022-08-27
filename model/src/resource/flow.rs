@@ -59,8 +59,8 @@ impl FlowBuilder {
         Flow {
             id: Uuid::new_v4(),
             version: TaiTime::now(),
-            label: self.label.unwrap_or(String::new()),
-            description: self.description.unwrap_or(String::new()),
+            label: self.label.unwrap_or_default(),
+            description: self.description.unwrap_or_default(),
             format: self.format,
             tags: self.tags,
             source_id: self.source_id,

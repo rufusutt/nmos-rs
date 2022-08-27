@@ -23,6 +23,7 @@ use crate::{
     service::NmosService,
 };
 
+#[derive(Default)]
 pub struct NodeBuilder {
     event_handler: Option<Arc<dyn EventHandler>>,
     resource_bundle: ResourceBundle,
@@ -106,6 +107,10 @@ impl Node {
         NodeBuilder::from_resources(resource_bundle)
     }
 
+    pub fn model(&self) -> Arc<Model> {
+        self.model.clone()
+    }
+
     pub async fn start(self) -> Result<()> {
         info!("Starting nmos-rs node");
 
@@ -115,7 +120,6 @@ impl Node {
         let mdns_thread = thread::spawn(move || {
             // Create context
             let mut context = MdnsContext::new(&NmosMdnsConfig {}, tx);
-
             let poller = context.start();
 
             loop {

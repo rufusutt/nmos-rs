@@ -45,7 +45,7 @@ impl DeviceBuilder {
         Device {
             id: Uuid::new_v4(),
             version: TaiTime::now(),
-            label: self.label.unwrap_or(String::new()),
+            label: self.label.unwrap_or_default(),
             type_: self.type_,
             node_id: self.node_id,
             senders: Vec::new(),

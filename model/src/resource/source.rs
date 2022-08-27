@@ -59,8 +59,8 @@ impl SourceBuilder {
         Source {
             id: Uuid::new_v4(),
             version: TaiTime::now(),
-            label: self.label.unwrap_or(String::new()),
-            description: self.description.unwrap_or(String::new()),
+            label: self.label.unwrap_or_default(),
+            description: self.description.unwrap_or_default(),
             format: self.format,
             tags: self.tags,
             device_id: self.device_id,

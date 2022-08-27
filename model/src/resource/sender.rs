@@ -62,13 +62,13 @@ impl SenderBuilder {
         Sender {
             id: Uuid::new_v4(),
             version: TaiTime::now(),
-            label: self.label.unwrap_or(String::new()),
-            description: self.description.unwrap_or(String::new()),
+            label: self.label.unwrap_or_default(),
+            description: self.description.unwrap_or_default(),
             flow_id: self.flow_id,
             transport: self.transport,
             tags: self.tags,
             device_id: self.device_id,
-            manifest_href: self.manifest_href.unwrap_or(String::new()),
+            manifest_href: self.manifest_href.unwrap_or_default(),
         }
     }
 }

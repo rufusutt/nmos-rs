@@ -89,32 +89,32 @@ impl Model {
     }
 
     // Get nodes
-    pub async fn nodes<'a>(&'a self) -> RwLockReadGuard<'a, HashMap<Uuid, Node>> {
+    pub async fn nodes(&self) -> RwLockReadGuard<'_, HashMap<Uuid, Node>> {
         self.nodes.read().await
     }
 
     // Get devices
-    pub async fn devices<'a>(&'a self) -> RwLockReadGuard<'a, HashMap<Uuid, Device>> {
+    pub async fn devices(&self) -> RwLockReadGuard<'_, HashMap<Uuid, Device>> {
         self.devices.read().await
     }
 
     // Get receivers
-    pub async fn receivers<'a>(&'a self) -> RwLockReadGuard<'a, HashMap<Uuid, Receiver>> {
+    pub async fn receivers(&self) -> RwLockReadGuard<'_, HashMap<Uuid, Receiver>> {
         self.receivers.read().await
     }
 
     // Get senders
-    pub async fn senders<'a>(&'a self) -> RwLockReadGuard<'a, HashMap<Uuid, Sender>> {
+    pub async fn senders(&self) -> RwLockReadGuard<'_, HashMap<Uuid, Sender>> {
         self.senders.read().await
     }
 
     // Get sources
-    pub async fn sources<'a>(&'a self) -> RwLockReadGuard<'a, HashMap<Uuid, Source>> {
+    pub async fn sources(&self) -> RwLockReadGuard<'_, HashMap<Uuid, Source>> {
         self.sources.read().await
     }
 
     // Get flows
-    pub async fn flows<'a>(&'a self) -> RwLockReadGuard<'a, HashMap<Uuid, Flow>> {
+    pub async fn flows(&self) -> RwLockReadGuard<'_, HashMap<Uuid, Flow>> {
         self.flows.read().await
     }
 

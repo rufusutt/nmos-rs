@@ -57,7 +57,7 @@ impl NodeBuilder {
         Node {
             id: Uuid::new_v4(),
             version: TaiTime::now(),
-            label: self.label.unwrap_or(String::new()),
+            label: self.label.unwrap_or_default(),
             href: self.href,
             hostname: self.hostname,
             services: self.services,
