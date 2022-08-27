@@ -1,5 +1,6 @@
 pub mod resource;
 pub mod tai;
+pub mod version;
 
 use std::collections::HashMap;
 

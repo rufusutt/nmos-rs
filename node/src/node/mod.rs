@@ -1,9 +1,9 @@
 mod event_handler;
 mod mdns;
 
-use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
+use std::{collections::BinaryHeap, sync::Arc};
 
 use axum::http::Method;
 use axum::Server;
@@ -16,7 +16,11 @@ use tower::ServiceBuilder;
 use tower_http::cors::{self, CorsLayer};
 use tracing::info;
 
-use crate::{error::Result, node::mdns::MdnsConfig, service::NmosService};
+use crate::{
+    error::Result,
+    node::mdns::{NmosMdnsConfig, NmosMdnsEvent, NmosMdnsRegistry},
+    service::NmosService,
+};
 
 pub struct NodeBuilder {
     event_handler: Option<Arc<dyn EventHandler>>,
@@ -36,9 +40,6 @@ impl NodeBuilder {
     }
 
     pub async fn build(self) -> Node {
-        // Create mdns context
-        // let mdns_context = MdnsContext::new();
-
         // Create nmos model
         let mut model = Model::new();
 
@@ -89,7 +90,7 @@ impl Node {
 
         let mdns_thread = thread::spawn(move || {
             // Create context
-            let mut context = MdnsContext::new(&MdnsConfig {}, tx);
+            let mut context = MdnsContext::new(&NmosMdnsConfig {}, tx);
 
             let poller = context.start();
 
@@ -100,9 +101,16 @@ impl Node {
             }
         });
 
-        while let Some(rx) = rx.recv().await {
-            dbg!(rx);
-        }
+        let mut registries = BinaryHeap::new();
+
+        let mdns_receiver = async {
+            while let Some(event) = rx.recv().await {
+                if let NmosMdnsEvent::Discovery(_, Ok(discovery)) = event {
+                    let mdns_registry = NmosMdnsRegistry::parse(&discovery);
+                    registries.push(mdns_registry);
+                }
+            }
+        };
 
         // Create server
         let app = ServiceBuilder::new()
@@ -114,10 +122,12 @@ impl Node {
             .service(self.service);
 
         let addr = ([0, 0, 0, 0], 3000).into();
-        Server::bind(&addr)
-            .serve(Shared::new(app))
-            .await
-            .expect("Server error");
+        let server = Server::bind(&addr).serve(Shared::new(app));
+
+        tokio::select! {
+            _ = mdns_receiver => {}
+            _ = server => {}
+        };
 
         Ok(())
     }

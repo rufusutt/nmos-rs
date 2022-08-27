@@ -1,14 +1,119 @@
-use std::{any::Any, sync::Arc, time::Duration};
+use std::{
+    any::Any,
+    cmp::Ordering,
+    net::{IpAddr, SocketAddr},
+    str::FromStr,
+    sync::Arc,
+    time::Duration,
+};
 
+use http::Uri;
+use nmos_rs_model::version::APIVersion;
 use tokio::sync::mpsc::{self, UnboundedSender};
-use tracing::info;
+use tracing::{error, info};
 use zeroconf::{
     browser::TMdnsBrowser, event_loop::TEventLoop, service::TMdnsService, txt_record::TTxtRecord,
     EventLoop, MdnsBrowser, MdnsService, ServiceDiscovery, ServiceRegistration, ServiceType,
     TxtRecord,
 };
 
-pub struct MdnsConfig {}
+pub struct NmosMdnsConfig {}
+
+#[derive(Debug, Eq, PartialEq)]
+pub struct NmosMdnsRegistry {
+    api_proto: String,
+    api_ver: Vec<APIVersion>,
+    api_auth: bool,
+    pri: u8,
+    uri: Uri,
+}
+
+impl NmosMdnsRegistry {
+    pub fn parse(discovery: &ServiceDiscovery) -> Option<Self> {
+        // TXT record required
+        let txt = match discovery.txt() {
+            Some(txt) => txt,
+            None => return None,
+        };
+
+        // Get required fields
+        if let (Some(api_proto), Some(api_ver), Some(api_auth), Some(pri)) = (
+            txt.get("api_proto"),
+            txt.get("api_ver"),
+            txt.get("api_auth"),
+            txt.get("pri"),
+        ) {
+            // TODO: Validate fields
+
+            let address = discovery.address();
+            let port = discovery.port();
+
+            // Use std to form valid address port combination
+            let address = match IpAddr::from_str(&address) {
+                Ok(addr) => addr,
+                Err(_) => return None,
+            };
+            let socket = SocketAddr::new(address, *port);
+            let authority = socket.to_string();
+
+            // Build URI
+            let uri = match Uri::builder()
+                .scheme(api_proto.as_str())
+                .authority(authority)
+                .path_and_query("/x-nmos/registration/")
+                .build()
+            {
+                Ok(uri) => uri,
+                Err(err) => {
+                    error!("Cannot build URI: {}", err);
+                    return None;
+                }
+            };
+
+            // Parse api_ver
+            let api_ver: Vec<APIVersion> = api_ver
+                .split(',')
+                .map(|v| APIVersion::from_str(v))
+                .flatten()
+                .collect();
+
+            // Parse api_auth
+            let api_auth = match api_auth.parse::<bool>() {
+                Ok(auth) => auth,
+                Err(_) => return None,
+            };
+
+            // Parse pri
+            let pri = match pri.parse::<u8>() {
+                Ok(pri) => pri,
+                Err(_) => return None,
+            };
+
+            Some(Self {
+                api_proto,
+                api_ver,
+                api_auth,
+                pri,
+                uri,
+            })
+        } else {
+            return None;
+        }
+    }
+}
+
+impl Ord for NmosMdnsRegistry {
+    fn cmp(&self, other: &Self) -> Ordering {
+        // Order entries by smallest priority
+        other.pri.cmp(&self.pri)
+    }
+}
+
+impl PartialOrd for NmosMdnsRegistry {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
 
 #[derive(Debug)]
 pub struct MdnsContext {
@@ -41,6 +146,11 @@ impl MdnsContext {
         result: zeroconf::Result<ServiceDiscovery>,
         context: Option<Arc<dyn Any>>,
     ) {
+        match &result {
+            Ok(d) => info!("Discovered service: {:?}", d),
+            Err(e) => error!("Service discovery error: {}", e),
+        };
+
         // Cast context
         let tx = context
             .as_ref()
@@ -57,6 +167,11 @@ impl MdnsContext {
         result: zeroconf::Result<ServiceRegistration>,
         context: Option<Arc<dyn Any>>,
     ) {
+        match &result {
+            Ok(r) => info!("{} service registered", r.service_type().to_string()),
+            Err(e) => error!("Registration error: {}", e),
+        }
+
         // Cast context
         let tx = context
             .as_ref()
@@ -68,7 +183,7 @@ impl MdnsContext {
             .expect("Unable to send MDNS event");
     }
 
-    pub fn new(config: &MdnsConfig, tx: mpsc::UnboundedSender<NmosMdnsEvent>) -> MdnsContext {
+    pub fn new(config: &NmosMdnsConfig, tx: mpsc::UnboundedSender<NmosMdnsEvent>) -> MdnsContext {
         // Create registration browser
         let mut register_browser =
             MdnsBrowser::new(ServiceType::new("nmos-register", "tcp").unwrap());
@@ -91,7 +206,7 @@ impl MdnsContext {
 
         MdnsContext {
             register_browser: Some(register_browser),
-            node_service: None,
+            node_service: Some(node_service),
             query_service: None,
         }
     }
@@ -105,6 +220,10 @@ impl MdnsContext {
                     .browse_services()
                     .expect("Register event handler"),
             );
+        }
+
+        if let Some(node_service) = &mut self.node_service {
+            event_loops.push(node_service.register().unwrap());
         }
 
         MdnsPoller { event_loops }
