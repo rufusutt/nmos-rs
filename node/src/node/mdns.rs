@@ -7,8 +7,8 @@ use std::{
     time::Duration,
 };
 
-use http::Uri;
 use nmos_rs_model::version::APIVersion;
+use reqwest::Url;
 use tokio::sync::mpsc::{self, UnboundedSender};
 use tracing::{error, info};
 use zeroconf::{
@@ -21,11 +21,11 @@ pub struct NmosMdnsConfig {}
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct NmosMdnsRegistry {
-    api_proto: String,
-    api_ver: Vec<APIVersion>,
-    api_auth: bool,
-    pri: u8,
-    uri: Uri,
+    pub api_proto: String,
+    pub api_ver: Vec<APIVersion>,
+    pub api_auth: bool,
+    pub pri: u8,
+    pub url: Url,
 }
 
 impl NmosMdnsRegistry {
@@ -56,16 +56,13 @@ impl NmosMdnsRegistry {
             let socket = SocketAddr::new(address, *port);
             let authority = socket.to_string();
 
-            // Build URI
-            let uri = match Uri::builder()
-                .scheme(api_proto.as_str())
-                .authority(authority)
-                .path_and_query("/x-nmos/registration/")
-                .build()
-            {
-                Ok(uri) => uri,
+            // Build URL
+            let base = format!("{}://{}/x-nmos/registration/", api_proto, authority);
+
+            let url = match Url::parse(&base) {
+                Ok(url) => url,
                 Err(err) => {
-                    error!("Cannot build URI: {}", err);
+                    error!("Cannot build URL: {}", err);
                     return None;
                 }
             };
@@ -91,7 +88,7 @@ impl NmosMdnsRegistry {
                 api_ver,
                 api_auth,
                 pri,
-                uri,
+                url,
             })
         } else {
             None

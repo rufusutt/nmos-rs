@@ -11,11 +11,11 @@ pub use event_handler::EventHandler;
 use mdns::MdnsContext;
 use nmos_rs_model::resource;
 use nmos_rs_model::{resource::ResourceBundle, Model};
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, Mutex};
 use tower::make::Shared;
 use tower::ServiceBuilder;
 use tower_http::cors::{self, CorsLayer};
-use tracing::info;
+use tracing::{error, info};
 
 use crate::{
     error::Result,
@@ -117,30 +117,42 @@ impl Node {
         // Channel for receiving MDNS events
         let (tx, mut rx) = mpsc::unbounded_channel();
 
-        let mdns_thread = thread::spawn(move || {
+        // Keep discovered registries in a priority queue
+        let registries = Arc::new(Mutex::new(BinaryHeap::new()));
+
+        // MDNS must run on its own thread
+        // Events are sent back to the Tokio runtime
+        thread::spawn(move || {
             // Create context
-            let mut context = MdnsContext::new(&NmosMdnsConfig {}, tx);
+            let mut context = MdnsContext::new(&NmosMdnsConfig {}, tx.clone());
             let poller = context.start();
 
             loop {
+                // Check event channel is still valid
+                if tx.is_closed() {
+                    break;
+                }
+
                 // Poll every 100 ms
                 poller.poll();
                 thread::sleep(Duration::from_millis(100));
             }
         });
 
-        let mut registries = BinaryHeap::new();
-
+        // Receive MDNS events in "main thread"
         let mdns_receiver = async {
+            let registries = registries.clone();
+
             while let Some(event) = rx.recv().await {
                 if let NmosMdnsEvent::Discovery(_, Ok(discovery)) = event {
-                    let mdns_registry = NmosMdnsRegistry::parse(&discovery);
-                    registries.push(mdns_registry);
+                    if let Some(registry) = NmosMdnsRegistry::parse(&discovery) {
+                        registries.lock().await.push(registry);
+                    }
                 }
             }
         };
 
-        // Create server
+        // Create HTTP service
         let app = ServiceBuilder::new()
             .layer(
                 CorsLayer::new()
@@ -150,11 +162,30 @@ impl Node {
             .service(self.service);
 
         let addr = ([0, 0, 0, 0], 3000).into();
-        let server = Server::bind(&addr).serve(Shared::new(app));
+        let http_server = Server::bind(&addr).serve(Shared::new(app));
+
+        // Registry connection thread
+        let registration = async {
+            // Initial wait for registry discovery
+            tokio::time::sleep(Duration::from_secs(5)).await;
+
+            let registries = registries.lock().await;
+            if registries.is_empty() {
+                error!("Failed to discover a registry");
+                return;
+            }
+
+            for registry in registries.iter() {
+                let base = &registry.url.join("v1.0").unwrap();
+
+                info!("Attempting to register with {}", base);
+            }
+        };
 
         tokio::select! {
             _ = mdns_receiver => {}
-            _ = server => {}
+            _ = http_server => {}
+            _ = registration => {}
         };
 
         Ok(())
