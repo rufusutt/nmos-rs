@@ -43,15 +43,45 @@ impl fmt::Display for Transport {
     }
 }
 
-// #[derive(Debug)]
-// enum ResourceType {
-//     Node,
-//     Device,
-//     Source,
-//     Flow,
-//     Sender,
-//     Receiver,
-// }
+#[derive(Debug, Default)]
+pub struct ResourceBundle {
+    pub(crate) nodes: Vec<Node>,
+    pub(crate) devices: Vec<Device>,
+    pub(crate) sources: Vec<Source>,
+    pub(crate) flows: Vec<Flow>,
+    pub(crate) senders: Vec<Sender>,
+    pub(crate) receivers: Vec<Receiver>,
+}
+
+impl ResourceBundle {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn insert_node(&mut self, node: Node) {
+        self.nodes.push(node);
+    }
+
+    pub fn insert_device(&mut self, device: Device) {
+        self.devices.push(device);
+    }
+
+    pub fn insert_source(&mut self, source: Source) {
+        self.sources.push(source);
+    }
+
+    pub fn insert_flow(&mut self, flow: Flow) {
+        self.flows.push(flow);
+    }
+
+    pub fn insert_sender(&mut self, sender: Sender) {
+        self.senders.push(sender);
+    }
+
+    pub fn insert_receiver(&mut self, receiver: Receiver) {
+        self.receivers.push(receiver);
+    }
+}
 
 pub trait Resource {
     type JsonType;

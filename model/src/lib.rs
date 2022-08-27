@@ -4,7 +4,7 @@ pub mod version;
 
 use std::collections::HashMap;
 
-use resource::{Device, Flow, Node, Receiver, Sender, Source};
+use resource::{Device, Flow, Node, Receiver, ResourceBundle, Sender, Source};
 use tokio::sync::{RwLock, RwLockReadGuard};
 use uuid::Uuid;
 
@@ -13,15 +13,79 @@ pub struct Model {
     // IS-04 resources
     nodes: RwLock<HashMap<Uuid, Node>>,
     devices: RwLock<HashMap<Uuid, Device>>,
-    receivers: RwLock<HashMap<Uuid, Receiver>>,
-    senders: RwLock<HashMap<Uuid, Sender>>,
     sources: RwLock<HashMap<Uuid, Source>>,
     flows: RwLock<HashMap<Uuid, Flow>>,
+    senders: RwLock<HashMap<Uuid, Sender>>,
+    receivers: RwLock<HashMap<Uuid, Receiver>>,
 }
 
 impl Model {
     pub fn new() -> Self {
         Default::default()
+    }
+
+    pub fn from_resources(resource_bundle: ResourceBundle) -> Self {
+        // Fold each resource vec into a hashmap
+        let nodes = resource_bundle
+            .nodes
+            .into_iter()
+            .fold(HashMap::new(), |mut map, node| {
+                map.insert(node.id, node);
+                map
+            });
+
+        let devices =
+            resource_bundle
+                .devices
+                .into_iter()
+                .fold(HashMap::new(), |mut map, device| {
+                    map.insert(device.id, device);
+                    map
+                });
+
+        let sources =
+            resource_bundle
+                .sources
+                .into_iter()
+                .fold(HashMap::new(), |mut map, source| {
+                    map.insert(source.id, source);
+                    map
+                });
+
+        let flows = resource_bundle
+            .flows
+            .into_iter()
+            .fold(HashMap::new(), |mut map, flow| {
+                map.insert(flow.id, flow);
+                map
+            });
+
+        let senders =
+            resource_bundle
+                .senders
+                .into_iter()
+                .fold(HashMap::new(), |mut map, sender| {
+                    map.insert(sender.id, sender);
+                    map
+                });
+
+        let receivers =
+            resource_bundle
+                .receivers
+                .into_iter()
+                .fold(HashMap::new(), |mut map, receiver| {
+                    map.insert(receiver.id, receiver);
+                    map
+                });
+
+        Self {
+            nodes: RwLock::new(nodes),
+            devices: RwLock::new(devices),
+            sources: RwLock::new(sources),
+            flows: RwLock::new(flows),
+            senders: RwLock::new(senders),
+            receivers: RwLock::new(receivers),
+        }
     }
 
     // Get nodes

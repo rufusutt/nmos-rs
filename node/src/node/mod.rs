@@ -9,7 +9,8 @@ use axum::http::Method;
 use axum::Server;
 pub use event_handler::EventHandler;
 use mdns::MdnsContext;
-use nmos_rs_model::{resource, Model};
+use nmos_rs_model::resource;
+use nmos_rs_model::{resource::ResourceBundle, Model};
 use tokio::sync::mpsc;
 use tower::make::Shared;
 use tower::ServiceBuilder;
@@ -24,12 +25,21 @@ use crate::{
 
 pub struct NodeBuilder {
     event_handler: Option<Arc<dyn EventHandler>>,
+    resource_bundle: ResourceBundle,
 }
 
 impl NodeBuilder {
     pub fn new() -> Self {
         Self {
             event_handler: None,
+            resource_bundle: Default::default(),
+        }
+    }
+
+    pub fn from_resources(resource_bundle: ResourceBundle) -> Self {
+        Self {
+            event_handler: None,
+            resource_bundle,
         }
     }
 
@@ -39,23 +49,33 @@ impl NodeBuilder {
         self
     }
 
+    pub fn node(&mut self, node: resource::Node) {
+        self.resource_bundle.insert_node(node)
+    }
+
+    pub fn device(&mut self, device: resource::Device) {
+        self.resource_bundle.insert_device(device)
+    }
+
+    pub fn source(&mut self, source: resource::Source) {
+        self.resource_bundle.insert_source(source)
+    }
+
+    pub fn flow(&mut self, flow: resource::Flow) {
+        self.resource_bundle.insert_flow(flow)
+    }
+
+    pub fn sender(&mut self, sender: resource::Sender) {
+        self.resource_bundle.insert_sender(sender)
+    }
+
+    pub fn receiver(&mut self, receiver: resource::Receiver) {
+        self.resource_bundle.insert_receiver(receiver)
+    }
+
     pub async fn build(self) -> Node {
         // Create nmos model
-        let mut model = Model::new();
-
-        // Create new node
-        let node = resource::NodeBuilder::new("Test").build();
-        let device = resource::DeviceBuilder::new(&node, "devicetype").build();
-        let receiver = resource::ReceiverBuilder::new(
-            &device,
-            resource::Format::Video,
-            resource::Transport::RtpMulticast,
-        )
-        .build();
-
-        model.insert_node(node).await;
-        model.insert_device(device).await;
-        model.insert_receiver(receiver).await;
+        let model = Model::from_resources(self.resource_bundle);
 
         // Wrap model in Arc
         let model = Arc::new(model);
@@ -80,6 +100,10 @@ pub struct Node {
 impl Node {
     pub fn builder() -> NodeBuilder {
         NodeBuilder::new()
+    }
+
+    pub fn builder_from_resources(resource_bundle: ResourceBundle) -> NodeBuilder {
+        NodeBuilder::from_resources(resource_bundle)
     }
 
     pub async fn start(self) -> Result<()> {
