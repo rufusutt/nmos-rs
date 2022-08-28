@@ -25,12 +25,12 @@ impl Source {
 }
 
 pub struct SourceBuilder {
-    pub label: Option<String>,
-    pub description: Option<String>,
-    pub format: Format,
-    pub tags: BTreeMap<String, Vec<String>>,
-    pub device_id: Uuid,
-    pub parents: Vec<Uuid>,
+    label: Option<String>,
+    description: Option<String>,
+    format: Format,
+    tags: BTreeMap<String, Vec<String>>,
+    device_id: Uuid,
+    parents: Vec<Uuid>,
 }
 
 impl SourceBuilder {
@@ -45,13 +45,13 @@ impl SourceBuilder {
         }
     }
 
-    pub fn label(mut self, label: String) -> SourceBuilder {
-        self.label = Some(label);
+    pub fn label<S: Into<String>>(mut self, label: S) -> SourceBuilder {
+        self.label = Some(label.into());
         self
     }
 
-    pub fn description(mut self, description: String) -> SourceBuilder {
-        self.description = Some(description);
+    pub fn description<S: Into<String>>(mut self, description: S) -> SourceBuilder {
+        self.description = Some(description.into());
         self
     }
 

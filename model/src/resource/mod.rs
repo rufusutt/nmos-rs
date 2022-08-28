@@ -7,14 +7,14 @@ mod source;
 
 use core::fmt;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum Format {
     Video,
     Audio,
     Data,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum Transport {
     Rtp,
     RtpUnicast,

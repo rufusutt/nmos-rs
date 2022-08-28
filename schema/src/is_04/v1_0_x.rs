@@ -46,4 +46,11 @@ pub mod registrationapi {
     schemafy::schemafy!(root: HealthResponseJson "schemas/registrationapi-health-response.json");
     schemafy::schemafy!(root: ResourceResponseJson "schemas/registrationapi-resource-response.json");
     schemafy::schemafy!(root: ResourcePostRequestJson "schemas/registrationapi-v1.0-resource-post-request.json");
+
+    pub type ResourcePostRequestJsonNode = ResourcePostRequestJsonVariant0;
+    pub type ResourcePostRequestJsonDevice = ResourcePostRequestJsonVariant1;
+    pub type ResourcePostRequestJsonSender = ResourcePostRequestJsonVariant2;
+    pub type ResourcePostRequestJsonReceiver = ResourcePostRequestJsonVariant3;
+    pub type ResourcePostRequestJsonSource = ResourcePostRequestJsonVariant4;
+    pub type ResourcePostRequestJsonFlow = ResourcePostRequestJsonVariant5;
 }

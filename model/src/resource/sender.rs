@@ -26,13 +26,13 @@ impl Sender {
 }
 
 pub struct SenderBuilder {
-    pub label: Option<String>,
-    pub description: Option<String>,
-    pub flow_id: Uuid,
-    pub transport: Transport,
-    pub tags: BTreeMap<String, Vec<String>>,
-    pub device_id: Uuid,
-    pub manifest_href: Option<String>,
+    label: Option<String>,
+    description: Option<String>,
+    flow_id: Uuid,
+    transport: Transport,
+    tags: BTreeMap<String, Vec<String>>,
+    device_id: Uuid,
+    manifest_href: Option<String>,
 }
 
 impl SenderBuilder {
@@ -48,13 +48,19 @@ impl SenderBuilder {
         }
     }
 
-    pub fn label(mut self, label: String) -> SenderBuilder {
-        self.label = Some(label);
+    pub fn label<S: Into<String>>(mut self, label: S) -> SenderBuilder {
+        self.label = Some(label.into());
         self
     }
 
-    pub fn description(mut self, description: String) -> SenderBuilder {
-        self.description = Some(description);
+    pub fn description<S: Into<String>>(mut self, description: S) -> SenderBuilder {
+        self.description = Some(description.into());
+        self
+    }
+
+    pub fn manifest<S: Into<String>>(mut self, manifest: S) -> SenderBuilder {
+        // TODO: Store manifest and generate href
+        self.manifest_href = Some(manifest.into());
         self
     }
 

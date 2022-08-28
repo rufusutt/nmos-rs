@@ -36,8 +36,8 @@ impl DeviceBuilder {
         }
     }
 
-    pub fn label(mut self, label: String) -> DeviceBuilder {
-        self.label = Some(label);
+    pub fn label<S: Into<String>>(mut self, label: S) -> DeviceBuilder {
+        self.label = Some(label.into());
         self
     }
 

@@ -32,8 +32,7 @@ async fn main() {
     // Create node
     let node = Node::builder_from_resources(resources)
         .event_handler(Handler)
-        .build()
-        .await;
+        .build();
 
     if let Err(e) = node.start().await {
         println!("Node error: {:?}", e);

@@ -19,39 +19,39 @@ pub struct Flow {
 }
 
 impl Flow {
-    pub fn builder(source: &Source, format: Format) -> FlowBuilder {
-        FlowBuilder::new(source, format)
+    pub fn builder(source: &Source) -> FlowBuilder {
+        FlowBuilder::new(source)
     }
 }
 
 pub struct FlowBuilder {
-    pub label: Option<String>,
-    pub description: Option<String>,
-    pub format: Format,
-    pub tags: BTreeMap<String, Vec<String>>,
-    pub source_id: Uuid,
-    pub parents: Vec<Uuid>,
+    label: Option<String>,
+    description: Option<String>,
+    format: Format,
+    tags: BTreeMap<String, Vec<String>>,
+    source_id: Uuid,
+    parents: Vec<Uuid>,
 }
 
 impl FlowBuilder {
-    pub fn new(source: &Source, format: Format) -> FlowBuilder {
+    pub fn new(source: &Source) -> FlowBuilder {
         FlowBuilder {
             label: None,
             description: None,
-            format,
+            format: source.format,
             tags: Default::default(),
             source_id: source.id,
             parents: Vec::new(),
         }
     }
 
-    pub fn label(mut self, label: String) -> FlowBuilder {
-        self.label = Some(label);
+    pub fn label<S: Into<String>>(mut self, label: S) -> FlowBuilder {
+        self.label = Some(label.into());
         self
     }
 
-    pub fn description(mut self, description: String) -> FlowBuilder {
-        self.description = Some(description);
+    pub fn description<S: Into<String>>(mut self, description: S) -> FlowBuilder {
+        self.description = Some(description.into());
         self
     }
 

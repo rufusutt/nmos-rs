@@ -9,8 +9,9 @@ use axum::http::Method;
 use axum::Server;
 pub use event_handler::EventHandler;
 use mdns::MdnsContext;
-use nmos_rs_model::resource;
+use nmos_rs_model::resource::{self, Resource};
 use nmos_rs_model::{resource::ResourceBundle, Model};
+use nmos_rs_schema::is_04;
 use tokio::sync::{mpsc, Mutex};
 use tower::make::Shared;
 use tower::ServiceBuilder;
@@ -74,7 +75,7 @@ impl NodeBuilder {
         self.resource_bundle.insert_receiver(receiver)
     }
 
-    pub async fn build(self) -> Node {
+    pub fn build(self) -> Node {
         // Create nmos model
         let model = Model::from_resources(self.resource_bundle);
 
@@ -169,6 +170,9 @@ impl Node {
             // Initial wait for registry discovery
             tokio::time::sleep(Duration::from_secs(5)).await;
 
+            // Create http client
+            let client = reqwest::Client::new();
+
             let registries = registries.lock().await;
             if registries.is_empty() {
                 error!("Failed to discover a registry");
@@ -176,7 +180,24 @@ impl Node {
             }
 
             for registry in registries.iter() {
-                let base = &registry.url.join("v1.0").unwrap();
+                let base = &registry.url.join("v1.0/").unwrap();
+
+                // Resource endpoint
+                let resource = &base.join("resource").unwrap();
+
+                let nodes = self.model.nodes().await;
+                let node = nodes.iter().next().unwrap().1;
+
+                let node_json = is_04::v1_0_x::registrationapi::ResourcePostRequestJsonNode {
+                    data: Some(node.to_json()),
+                    type_: Some(String::from("node")),
+                };
+
+                let post_request = is_04::v1_0_x::registrationapi::ResourcePostRequestJson::Variant0(node_json);
+
+                let ret = client.post(resource.clone()).json(&post_request).send().await;
+
+                dbg!(ret);
 
                 info!("Attempting to register with {}", base);
             }

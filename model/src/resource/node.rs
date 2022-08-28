@@ -43,8 +43,8 @@ impl NodeBuilder {
         }
     }
 
-    pub fn label(mut self, label: String) -> NodeBuilder {
-        self.label = Some(label);
+    pub fn label<S: Into<String>>(mut self, label: S) -> NodeBuilder {
+        self.label = Some(label.into());
         self
     }
 
