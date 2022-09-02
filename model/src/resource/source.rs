@@ -1,28 +1,14 @@
 use std::collections::BTreeMap;
 
 use nmos_rs_schema::is_04;
+use serde::Serialize;
 use uuid::Uuid;
 
-use super::{Device, Format, Resource};
-use crate::tai::TaiTime;
-
-#[derive(Debug)]
-pub struct Source {
-    pub id: Uuid,
-    pub version: TaiTime,
-    pub label: String,
-    pub description: String,
-    pub format: Format,
-    pub tags: BTreeMap<String, Vec<String>>,
-    pub device_id: Uuid,
-    pub parents: Vec<Uuid>,
-}
-
-impl Source {
-    pub fn builder(device: &Device, format: Format) -> SourceBuilder {
-        SourceBuilder::new(device, format)
-    }
-}
+use crate::{
+    resource::{Device, Format},
+    tai::TaiTime,
+    version::{APIVersion, is_04::V1_0},
+};
 
 pub struct SourceBuilder {
     label: Option<String>,
@@ -69,31 +55,56 @@ impl SourceBuilder {
     }
 }
 
-impl Resource for Source {
-    type JsonType = is_04::v1_0_x::SourceJson;
+#[derive(Debug)]
+pub struct Source {
+    pub id: Uuid,
+    pub version: TaiTime,
+    pub label: String,
+    pub description: String,
+    pub format: Format,
+    pub tags: BTreeMap<String, Vec<String>>,
+    pub device_id: Uuid,
+    pub parents: Vec<Uuid>,
+}
 
-    fn to_json(&self) -> Self::JsonType {
-        let tags = self
-            .tags
-            .iter()
-            .fold(BTreeMap::new(), |mut map, (key, array)| {
-                let value = serde_json::Value::from(array.clone());
-                map.insert(key.clone(), value);
-                map
-            });
+impl Source {
+    pub fn builder(device: &Device, format: Format) -> SourceBuilder {
+        SourceBuilder::new(device, format)
+    }
 
-        let parents = self.parents.iter().map(|p| p.to_string()).collect();
+    pub fn to_json(&self, api: &APIVersion) -> SourceJson {
+        match *api {
+            V1_0 => {
+                let tags = self
+                    .tags
+                    .iter()
+                    .fold(BTreeMap::new(), |mut map, (key, array)| {
+                        let value = serde_json::Value::from(array.clone());
+                        map.insert(key.clone(), value);
+                        map
+                    });
 
-        is_04::v1_0_x::SourceJson {
-            id: self.id.to_string(),
-            version: self.version.to_string(),
-            label: self.label.clone(),
-            description: self.description.clone(),
-            format: self.format.to_string(),
-            caps: Default::default(),
-            tags,
-            device_id: self.device_id.to_string(),
-            parents,
+                let parents = self.parents.iter().map(|p| p.to_string()).collect();
+
+                SourceJson::V1_0(is_04::v1_0_x::SourceJson {
+                    id: self.id.to_string(),
+                    version: self.version.to_string(),
+                    label: self.label.clone(),
+                    description: self.description.clone(),
+                    format: self.format.to_string(),
+                    caps: Default::default(),
+                    tags,
+                    device_id: self.device_id.to_string(),
+                    parents,
+                })
+            }
+            _ => panic!("Unsupported API"),
         }
     }
+}
+
+#[derive(Debug, Serialize)]
+#[serde(untagged)]
+pub enum SourceJson {
+    V1_0(is_04::v1_0_x::SourceJson),
 }

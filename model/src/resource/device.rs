@@ -1,25 +1,12 @@
 use nmos_rs_schema::is_04;
+use serde::Serialize;
 use uuid::Uuid;
 
-use super::{Node, Resource};
-use crate::tai::TaiTime;
-
-#[derive(Debug)]
-pub struct Device {
-    pub id: Uuid,
-    pub version: TaiTime,
-    pub label: String,
-    pub type_: String,
-    pub node_id: Uuid,
-    pub senders: Vec<Uuid>,
-    pub receivers: Vec<Uuid>,
-}
-
-impl Device {
-    pub fn builder<S: Into<String>>(node: &Node, device_type: S) -> DeviceBuilder {
-        DeviceBuilder::new(node, device_type)
-    }
-}
+use crate::{
+    resource::Node,
+    tai::TaiTime,
+    version::{is_04::V1_0, APIVersion},
+};
 
 pub struct DeviceBuilder {
     label: Option<String>,
@@ -54,24 +41,48 @@ impl DeviceBuilder {
     }
 }
 
-impl Resource for Device {
-    type JsonType = is_04::v1_0_x::DeviceJson;
+#[derive(Debug)]
+pub struct Device {
+    pub id: Uuid,
+    pub version: TaiTime,
+    pub label: String,
+    pub type_: String,
+    pub node_id: Uuid,
+    pub senders: Vec<Uuid>,
+    pub receivers: Vec<Uuid>,
+}
 
-    fn to_json(&self) -> Self::JsonType {
-        // Senders
-        let senders = self.senders.iter().map(|s| s.to_string()).collect();
+impl Device {
+    pub fn builder<S: Into<String>>(node: &Node, device_type: S) -> DeviceBuilder {
+        DeviceBuilder::new(node, device_type)
+    }
 
-        // Receivers
-        let receivers = self.receivers.iter().map(|r| r.to_string()).collect();
+    pub fn to_json(&self, api: &APIVersion) -> DeviceJson {
+        match *api {
+            V1_0 => {
+                // Senders
+                let senders = self.senders.iter().map(|s| s.to_string()).collect();
 
-        is_04::v1_0_x::DeviceJson {
-            id: self.id.to_string(),
-            version: self.version.to_string(),
-            label: self.label.clone(),
-            type_: self.type_.clone(),
-            node_id: self.node_id.to_string(),
-            senders,
-            receivers,
+                // Receivers
+                let receivers = self.receivers.iter().map(|r| r.to_string()).collect();
+
+                DeviceJson::V1_0(is_04::v1_0_x::DeviceJson {
+                    id: self.id.to_string(),
+                    version: self.version.to_string(),
+                    label: self.label.clone(),
+                    type_: self.type_.clone(),
+                    node_id: self.node_id.to_string(),
+                    senders,
+                    receivers,
+                })
+            }
+            _ => panic!("Unsupported API"),
         }
     }
+}
+
+#[derive(Debug, Serialize)]
+#[serde(untagged)]
+pub enum DeviceJson {
+    V1_0(is_04::v1_0_x::DeviceJson),
 }

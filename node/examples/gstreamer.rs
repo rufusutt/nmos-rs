@@ -2,6 +2,8 @@ use gst::{prelude::*, Pipeline};
 use gstreamer as gst;
 use nmos_rs_model::resource;
 use nmos_rs_node::node::Node;
+use tracing::Level;
+use tracing_subscriber::FmtSubscriber;
 
 fn create_pipeline() -> Result<Pipeline, Box<dyn std::error::Error>> {
     // Create VP8 RTP video test pipeline
@@ -67,6 +69,12 @@ fn create_node() -> Node {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Initialise logging
+    let subscriber = FmtSubscriber::builder()
+        .with_max_level(Level::INFO)
+        .finish();
+    tracing::subscriber::set_global_default(subscriber).expect("Set default subscriber");
+
     // Try to init gstreamer
     gstreamer::init()?;
 

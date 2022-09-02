@@ -83,29 +83,9 @@ impl ResourceBundle {
     }
 }
 
-pub trait Resource {
-    type JsonType;
-
-    fn to_json(&self) -> Self::JsonType;
-}
-
-pub use device::{Device, DeviceBuilder};
-pub use flow::{Flow, FlowBuilder};
-pub use node::{Node, NodeBuilder};
-pub use receiver::{Receiver, ReceiverBuilder};
-pub use sender::{Sender, SenderBuilder};
-pub use source::{Source, SourceBuilder};
-
-// pub trait Resource {
-//     type ResourceType;
-// }
-
-// #[derive(Debug)]
-// pub struct Resource {
-//     api: String,
-//     downgrade_api: String,
-//     subresources: HashSet<Uuid>,
-//     created: DateTime<Utc>,
-//     updated: DateTime<Utc>,
-//     data: String,
-// }
+pub use device::{Device, DeviceBuilder, DeviceJson};
+pub use flow::{Flow, FlowBuilder, FlowJson};
+pub use node::{Node, NodeBuilder, NodeJson};
+pub use receiver::{Receiver, ReceiverBuilder, ReceiverJson};
+pub use sender::{Sender, SenderBuilder, SenderJson};
+pub use source::{Source, SourceBuilder, SourceJson};

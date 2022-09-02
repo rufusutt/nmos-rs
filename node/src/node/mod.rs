@@ -9,9 +9,10 @@ use axum::http::Method;
 use axum::Server;
 pub use event_handler::EventHandler;
 use mdns::MdnsContext;
-use nmos_rs_model::resource::{self, Resource};
-use nmos_rs_model::{resource::ResourceBundle, Model};
-use nmos_rs_schema::is_04;
+use nmos_rs_model::{
+    resource::{self, ResourceBundle},
+    Model,
+};
 use tokio::sync::{mpsc, Mutex};
 use tower::make::Shared;
 use tower::ServiceBuilder;
@@ -112,6 +113,38 @@ impl Node {
         self.model.clone()
     }
 
+    async fn register_resources(model: Arc<Model>, registry: &NmosMdnsRegistry) {
+        // let base = &registry.url.join("v1.0/").unwrap();
+
+        // info!("Attempting to register with {}", base);
+
+        // // Resource endpoint
+        // let resource = &base.join("resource").unwrap();
+
+        // // for node in nodes {
+        // //     Self::register_node(base, node)
+        // // }
+
+        // let nodes = model.nodes().await;
+        // let node = nodes.iter().next().unwrap().1;
+
+        // let node_json = is_04::v1_0_x::registrationapi::ResourcePostRequestJsonNode {
+        //     data: Some(node.to_json()),
+        //     type_: Some(String::from("node")),
+        // };
+
+        // let post_request =
+        //     is_04::v1_0_x::registrationapi::ResourcePostRequestJson::Variant0(node_json);
+
+        // let ret = client
+        //     .post(resource.clone())
+        //     .json(&post_request)
+        //     .send()
+        //     .await;
+
+        // info!("{:?}", ret);
+    }
+
     pub async fn start(self) -> Result<()> {
         info!("Starting nmos-rs node");
 
@@ -180,33 +213,16 @@ impl Node {
             }
 
             for registry in registries.iter() {
-                let base = &registry.url.join("v1.0/").unwrap();
-
-                // Resource endpoint
-                let resource = &base.join("resource").unwrap();
-
-                let nodes = self.model.nodes().await;
-                let node = nodes.iter().next().unwrap().1;
-
-                let node_json = is_04::v1_0_x::registrationapi::ResourcePostRequestJsonNode {
-                    data: Some(node.to_json()),
-                    type_: Some(String::from("node")),
-                };
-
-                let post_request = is_04::v1_0_x::registrationapi::ResourcePostRequestJson::Variant0(node_json);
-
-                let ret = client.post(resource.clone()).json(&post_request).send().await;
-
-                dbg!(ret);
-
-                info!("Attempting to register with {}", base);
+                Self::register_resources(self.model.clone(), registry).await;
             }
+
+            tokio::time::sleep(Duration::from_millis(68719476734)).await;
         };
 
         tokio::select! {
             _ = mdns_receiver => {}
             _ = http_server => {}
-            _ = registration => {}
+            // _ = registration => {}
         };
 
         Ok(())

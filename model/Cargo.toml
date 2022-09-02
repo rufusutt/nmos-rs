@@ -7,4 +7,5 @@ edition = "2021"
 nmos-rs-schema = { path = "../schema" }
 tokio = { version = "1", features = ["sync"] }
 uuid = { version = "1", features = ["v4"] }
+serde = "1"
 serde_json = "1"

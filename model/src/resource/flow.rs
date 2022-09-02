@@ -1,28 +1,14 @@
 use std::collections::BTreeMap;
 
 use nmos_rs_schema::is_04;
+use serde::Serialize;
 use uuid::Uuid;
 
-use super::{Format, Resource, Source};
-use crate::tai::TaiTime;
-
-#[derive(Debug)]
-pub struct Flow {
-    pub id: Uuid,
-    pub version: TaiTime,
-    pub label: String,
-    pub description: String,
-    pub format: Format,
-    pub tags: BTreeMap<String, Vec<String>>,
-    pub source_id: Uuid,
-    pub parents: Vec<Uuid>,
-}
-
-impl Flow {
-    pub fn builder(source: &Source) -> FlowBuilder {
-        FlowBuilder::new(source)
-    }
-}
+use crate::{
+    resource::{Format, Source},
+    tai::TaiTime,
+    version::{APIVersion, is_04::V1_0},
+};
 
 pub struct FlowBuilder {
     label: Option<String>,
@@ -69,31 +55,56 @@ impl FlowBuilder {
     }
 }
 
-impl Resource for Flow {
-    type JsonType = is_04::v1_0_x::FlowJson;
+#[derive(Debug)]
+pub struct Flow {
+    pub id: Uuid,
+    pub version: TaiTime,
+    pub label: String,
+    pub description: String,
+    pub format: Format,
+    pub tags: BTreeMap<String, Vec<String>>,
+    pub source_id: Uuid,
+    pub parents: Vec<Uuid>,
+}
 
-    fn to_json(&self) -> Self::JsonType {
-        // Flows
-        let tags = self
-            .tags
-            .iter()
-            .fold(BTreeMap::new(), |mut map, (key, array)| {
-                let value = serde_json::Value::from(array.clone());
-                map.insert(key.clone(), value);
-                map
-            });
+impl Flow {
+    pub fn builder(source: &Source) -> FlowBuilder {
+        FlowBuilder::new(source)
+    }
 
-        let parents = self.parents.iter().map(|p| p.to_string()).collect();
+    pub fn to_json(&self, api: &APIVersion) -> FlowJson {
+        match *api {
+            V1_0 => {
+                // Tags
+                let tags = self
+                    .tags
+                    .iter()
+                    .fold(BTreeMap::new(), |mut map, (key, array)| {
+                        let value = serde_json::Value::from(array.clone());
+                        map.insert(key.clone(), value);
+                        map
+                    });
 
-        is_04::v1_0_x::FlowJson {
-            id: self.id.to_string(),
-            version: self.version.to_string(),
-            label: self.label.clone(),
-            description: self.description.clone(),
-            format: self.format.to_string(),
-            tags,
-            source_id: self.source_id.to_string(),
-            parents,
+                let parents = self.parents.iter().map(|p| p.to_string()).collect();
+
+                FlowJson::V1_0(is_04::v1_0_x::FlowJson {
+                    id: self.id.to_string(),
+                    version: self.version.to_string(),
+                    label: self.label.clone(),
+                    description: self.description.clone(),
+                    format: self.format.to_string(),
+                    tags,
+                    source_id: self.source_id.to_string(),
+                    parents,
+                })
+            }
+            _ => panic!("Unsupported API"),
         }
     }
+}
+
+#[derive(Debug, Serialize)]
+#[serde(untagged)]
+pub enum FlowJson {
+    V1_0(is_04::v1_0_x::FlowJson),
 }

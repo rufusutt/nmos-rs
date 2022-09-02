@@ -5,8 +5,8 @@ use std::{
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct APIVersion {
-    major: u8,
-    minor: u8,
+    pub major: u8,
+    pub minor: u8,
 }
 
 impl FromStr for APIVersion {
@@ -38,4 +38,10 @@ impl Display for APIVersion {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "v{}.{}", self.major, self.minor)
     }
+}
+
+pub mod is_04 {
+    use super::APIVersion;
+
+    pub const V1_0: APIVersion = APIVersion { major: 1, minor: 0 };
 }

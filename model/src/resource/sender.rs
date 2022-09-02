@@ -1,29 +1,14 @@
 use std::collections::BTreeMap;
 
 use nmos_rs_schema::is_04;
+use serde::Serialize;
 use uuid::Uuid;
 
-use super::{Device, Flow, Resource, Transport};
-use crate::tai::TaiTime;
-
-#[derive(Debug)]
-pub struct Sender {
-    pub id: Uuid,
-    pub version: TaiTime,
-    pub label: String,
-    pub description: String,
-    pub flow_id: Uuid,
-    pub transport: Transport,
-    pub tags: BTreeMap<String, Vec<String>>,
-    pub device_id: Uuid,
-    pub manifest_href: String,
-}
-
-impl Sender {
-    pub fn builder(device: &Device, flow: &Flow, transport: Transport) -> SenderBuilder {
-        SenderBuilder::new(device, flow, transport)
-    }
-}
+use crate::{
+    resource::{Device, Flow, Transport},
+    tai::TaiTime,
+    version::{is_04::V1_0, APIVersion},
+};
 
 pub struct SenderBuilder {
     label: Option<String>,
@@ -79,34 +64,60 @@ impl SenderBuilder {
     }
 }
 
-impl Resource for Sender {
-    type JsonType = is_04::v1_0_x::SenderJson;
+#[derive(Debug)]
+pub struct Sender {
+    pub id: Uuid,
+    pub version: TaiTime,
+    pub label: String,
+    pub description: String,
+    pub flow_id: Uuid,
+    pub transport: Transport,
+    pub tags: BTreeMap<String, Vec<String>>,
+    pub device_id: Uuid,
+    pub manifest_href: String,
+}
 
-    fn to_json(&self) -> Self::JsonType {
-        let tags = if !self.tags.is_empty() {
-            Some(
-                self.tags
-                    .iter()
-                    .fold(BTreeMap::new(), |mut map, (key, array)| {
-                        let value = serde_json::Value::from(array.clone());
-                        map.insert(key.clone(), value);
-                        map
-                    }),
-            )
-        } else {
-            None
-        };
+impl Sender {
+    pub fn builder(device: &Device, flow: &Flow, transport: Transport) -> SenderBuilder {
+        SenderBuilder::new(device, flow, transport)
+    }
 
-        is_04::v1_0_x::SenderJson {
-            id: self.id.to_string(),
-            version: self.version.to_string(),
-            label: self.label.clone(),
-            description: self.description.clone(),
-            flow_id: self.flow_id.to_string(),
-            transport: self.transport.to_string(),
-            tags,
-            device_id: self.device_id.to_string(),
-            manifest_href: self.manifest_href.clone(),
+    pub fn to_json(&self, api: &APIVersion) -> SenderJson {
+        match *api {
+            V1_0 => {
+                let tags = if !self.tags.is_empty() {
+                    Some(
+                        self.tags
+                            .iter()
+                            .fold(BTreeMap::new(), |mut map, (key, array)| {
+                                let value = serde_json::Value::from(array.clone());
+                                map.insert(key.clone(), value);
+                                map
+                            }),
+                    )
+                } else {
+                    None
+                };
+
+                SenderJson::V1_0(is_04::v1_0_x::SenderJson {
+                    id: self.id.to_string(),
+                    version: self.version.to_string(),
+                    label: self.label.clone(),
+                    description: self.description.clone(),
+                    flow_id: self.flow_id.to_string(),
+                    transport: self.transport.to_string(),
+                    tags,
+                    device_id: self.device_id.to_string(),
+                    manifest_href: self.manifest_href.clone(),
+                })
+            }
+            _ => panic!("Unsupported API"),
         }
     }
+}
+
+#[derive(Debug, Serialize)]
+#[serde(untagged)]
+pub enum SenderJson {
+    V1_0(is_04::v1_0_x::SenderJson),
 }

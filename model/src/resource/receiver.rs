@@ -1,29 +1,14 @@
 use std::collections::BTreeMap;
 
 use nmos_rs_schema::is_04;
+use serde::Serialize;
 use uuid::Uuid;
 
-use super::{Device, Format, Resource, Transport};
-use crate::tai::TaiTime;
-
-#[derive(Debug)]
-pub struct Receiver {
-    pub id: Uuid,
-    pub version: TaiTime,
-    pub label: String,
-    pub description: String,
-    pub format: Format,
-    pub tags: BTreeMap<String, Vec<String>>,
-    pub device_id: Uuid,
-    pub transport: Transport,
-    pub subscription: Option<Uuid>,
-}
-
-impl Receiver {
-    pub fn builder(device: &Device, format: Format, transport: Transport) -> ReceiverBuilder {
-        ReceiverBuilder::new(device, format, transport)
-    }
-}
+use crate::{
+    resource::{Device, Format, Transport},
+    tai::TaiTime,
+    version::{is_04::V1_0, APIVersion},
+};
 
 pub struct ReceiverBuilder {
     label: Option<String>,
@@ -73,34 +58,60 @@ impl ReceiverBuilder {
     }
 }
 
-impl Resource for Receiver {
-    type JsonType = is_04::v1_0_x::ReceiverJson;
+#[derive(Debug)]
+pub struct Receiver {
+    pub id: Uuid,
+    pub version: TaiTime,
+    pub label: String,
+    pub description: String,
+    pub format: Format,
+    pub tags: BTreeMap<String, Vec<String>>,
+    pub device_id: Uuid,
+    pub transport: Transport,
+    pub subscription: Option<Uuid>,
+}
 
-    fn to_json(&self) -> Self::JsonType {
-        let tags = self
-            .tags
-            .iter()
-            .fold(BTreeMap::new(), |mut map, (key, array)| {
-                let value = serde_json::Value::from(array.clone());
-                map.insert(key.clone(), value);
-                map
-            });
+impl Receiver {
+    pub fn builder(device: &Device, format: Format, transport: Transport) -> ReceiverBuilder {
+        ReceiverBuilder::new(device, format, transport)
+    }
 
-        let subscription = is_04::v1_0_x::ReceiverJsonSubscription {
-            sender_id: self.subscription.map(|s| s.to_string()),
-        };
+    pub fn to_json(&self, api: &APIVersion) -> ReceiverJson {
+        match *api {
+            V1_0 => {
+                let tags = self
+                    .tags
+                    .iter()
+                    .fold(BTreeMap::new(), |mut map, (key, array)| {
+                        let value = serde_json::Value::from(array.clone());
+                        map.insert(key.clone(), value);
+                        map
+                    });
 
-        is_04::v1_0_x::ReceiverJson {
-            id: self.id.to_string(),
-            version: self.version.to_string(),
-            label: self.label.clone(),
-            description: self.description.clone(),
-            format: self.format.to_string(),
-            caps: Default::default(),
-            tags,
-            device_id: self.device_id.to_string(),
-            transport: self.transport.to_string(),
-            subscription,
+                let subscription = is_04::v1_0_x::ReceiverJsonSubscription {
+                    sender_id: self.subscription.map(|s| s.to_string()),
+                };
+
+                ReceiverJson::V1_0(is_04::v1_0_x::ReceiverJson {
+                    id: self.id.to_string(),
+                    version: self.version.to_string(),
+                    label: self.label.clone(),
+                    description: self.description.clone(),
+                    format: self.format.to_string(),
+                    caps: Default::default(),
+                    tags,
+                    device_id: self.device_id.to_string(),
+                    transport: self.transport.to_string(),
+                    subscription,
+                })
+            }
+            _ => panic!("Unsupported API"),
         }
     }
+}
+
+#[derive(Debug, Serialize)]
+#[serde(untagged)]
+pub enum ReceiverJson {
+    V1_0(is_04::v1_0_x::ReceiverJson),
 }

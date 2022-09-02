@@ -118,14 +118,14 @@ impl Model {
         self.flows.read().await
     }
 
-    pub async fn insert_node(&mut self, node: Node) -> Option<()> {
+    pub async fn insert_node(&self, node: Node) -> Option<()> {
         let mut nodes = self.nodes.write().await;
         nodes.insert(node.id, node);
 
         Some(())
     }
 
-    pub async fn insert_device(&mut self, device: Device) -> Option<()> {
+    pub async fn insert_device(&self, device: Device) -> Option<()> {
         // Check node id in model
         let nodes = self.nodes.read().await;
         if !nodes.contains_key(&device.node_id) {
@@ -138,7 +138,7 @@ impl Model {
         Some(())
     }
 
-    pub async fn insert_receiver(&mut self, receiver: Receiver) -> Option<()> {
+    pub async fn insert_receiver(&self, receiver: Receiver) -> Option<()> {
         // Check device id in model
         let devices = self.devices.read().await;
         if !devices.contains_key(&receiver.device_id) {
