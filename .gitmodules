@@ -1,3 +1,12 @@
 [submodule "schema/vendor/is_04/v1_0_x"]
-	path = schema/vendor/is_04/v1_0_x
+path = schema/vendor/is_04/v1_0_x
+url = https://github.com/AMWA-TV/is-04.git
+[submodule "schema/vendor/is_04/v1_1_x"]
+	path = schema/vendor/is_04/v1_1_x
+	url = https://github.com/AMWA-TV/is-04.git
+[submodule "schema/vendor/is_04/v1_2_x"]
+	path = schema/vendor/is_04/v1_2_x
+	url = https://github.com/AMWA-TV/is-04.git
+[submodule "schema/vendor/is_04/v1_3_x"]
+	path = schema/vendor/is_04/v1_3_x
 	url = https://github.com/AMWA-TV/is-04.git
