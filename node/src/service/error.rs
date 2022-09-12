@@ -19,7 +19,7 @@ impl ServiceError {
 
 impl IntoResponse for ServiceError {
     fn into_response(self) -> Response {
-        let error = is_04::v1_0_x::ErrorJson {
+        let error = is_04::v1_0_x::Error {
             code: self.status.as_u16() as i64,
             debug: self.debug,
             error: self.status.to_string(),

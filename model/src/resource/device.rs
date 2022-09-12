@@ -66,7 +66,7 @@ impl Device {
                 // Receivers
                 let receivers = self.receivers.iter().map(|r| r.to_string()).collect();
 
-                DeviceJson::V1_0(is_04::v1_0_x::DeviceJson {
+                DeviceJson::V1_0(is_04::v1_0_x::Device {
                     id: self.id.to_string(),
                     version: self.version.to_string(),
                     label: self.label.clone(),
@@ -84,5 +84,5 @@ impl Device {
 #[derive(Debug, Serialize)]
 #[serde(untagged)]
 pub enum DeviceJson {
-    V1_0(is_04::v1_0_x::DeviceJson),
+    V1_0(is_04::v1_0_x::Device),
 }

@@ -86,7 +86,7 @@ impl Source {
 
                 let parents = self.parents.iter().map(|p| p.to_string()).collect();
 
-                SourceJson::V1_0(is_04::v1_0_x::SourceJson {
+                SourceJson::V1_0(is_04::v1_0_x::Source {
                     id: self.id.to_string(),
                     version: self.version.to_string(),
                     label: self.label.clone(),
@@ -106,5 +106,5 @@ impl Source {
 #[derive(Debug, Serialize)]
 #[serde(untagged)]
 pub enum SourceJson {
-    V1_0(is_04::v1_0_x::SourceJson),
+    V1_0(is_04::v1_0_x::Source),
 }

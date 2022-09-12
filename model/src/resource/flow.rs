@@ -87,7 +87,7 @@ impl Flow {
 
                 let parents = self.parents.iter().map(|p| p.to_string()).collect();
 
-                FlowJson::V1_0(is_04::v1_0_x::FlowJson {
+                FlowJson::V1_0(is_04::v1_0_x::Flow {
                     id: self.id.to_string(),
                     version: self.version.to_string(),
                     label: self.label.clone(),
@@ -106,5 +106,5 @@ impl Flow {
 #[derive(Debug, Serialize)]
 #[serde(untagged)]
 pub enum FlowJson {
-    V1_0(is_04::v1_0_x::FlowJson),
+    V1_0(is_04::v1_0_x::Flow),
 }

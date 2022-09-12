@@ -99,7 +99,7 @@ impl Sender {
                     None
                 };
 
-                SenderJson::V1_0(is_04::v1_0_x::SenderJson {
+                SenderJson::V1_0(is_04::v1_0_x::Sender {
                     id: self.id.to_string(),
                     version: self.version.to_string(),
                     label: self.label.clone(),
@@ -119,5 +119,5 @@ impl Sender {
 #[derive(Debug, Serialize)]
 #[serde(untagged)]
 pub enum SenderJson {
-    V1_0(is_04::v1_0_x::SenderJson),
+    V1_0(is_04::v1_0_x::Sender),
 }

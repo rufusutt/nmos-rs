@@ -73,13 +73,13 @@ impl Node {
                 let services = self
                     .services
                     .iter()
-                    .map(|service| is_04::v1_0_x::NodeJsonItemServices {
+                    .map(|service| is_04::v1_0_x::NodeItemServices {
                         href: service.href.clone(),
                         type_: service.type_.clone(),
                     })
                     .collect();
 
-                NodeJson::V1_0(is_04::v1_0_x::NodeJson {
+                NodeJson::V1_0(is_04::v1_0_x::Node {
                     id: self.id.to_string(),
                     version: self.version.to_string(),
                     label: self.label.clone(),
@@ -97,5 +97,5 @@ impl Node {
 #[derive(Debug, Serialize)]
 #[serde(untagged)]
 pub enum NodeJson {
-    V1_0(is_04::v1_0_x::NodeJson),
+    V1_0(is_04::v1_0_x::Node),
 }

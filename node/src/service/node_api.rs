@@ -81,6 +81,7 @@ pub async fn get_device(
 
     let device = match devices.get(&id) {
         Some(d) => d.to_json(&api),
+
         None => {
             return Err(ServiceError::new(
                 StatusCode::NOT_FOUND,

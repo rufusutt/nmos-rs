@@ -88,11 +88,11 @@ impl Receiver {
                         map
                     });
 
-                let subscription = is_04::v1_0_x::ReceiverJsonSubscription {
+                let subscription = is_04::v1_0_x::ReceiverSubscription {
                     sender_id: self.subscription.map(|s| s.to_string()),
                 };
 
-                ReceiverJson::V1_0(is_04::v1_0_x::ReceiverJson {
+                ReceiverJson::V1_0(is_04::v1_0_x::Receiver {
                     id: self.id.to_string(),
                     version: self.version.to_string(),
                     label: self.label.clone(),
@@ -113,5 +113,5 @@ impl Receiver {
 #[derive(Debug, Serialize)]
 #[serde(untagged)]
 pub enum ReceiverJson {
-    V1_0(is_04::v1_0_x::ReceiverJson),
+    V1_0(is_04::v1_0_x::Receiver),
 }
