@@ -1,11 +1,23 @@
+use core::fmt;
+use std::collections::BTreeMap;
+
+use uuid::Uuid;
+
+pub use device::{Device, DeviceBuilder, DeviceJson};
+pub use flow::{Flow, FlowBuilder, FlowJson};
+pub use node::{Node, NodeBuilder, NodeJson};
+pub use receiver::{Receiver, ReceiverBuilder, ReceiverJson};
+pub use sender::{Sender, SenderBuilder, SenderJson};
+pub use source::{Source, SourceBuilder, SourceJson};
+
+use crate::tai::TaiTime;
+
 mod device;
 mod flow;
 mod node;
 mod receiver;
 mod sender;
 mod source;
-
-use core::fmt;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Format {
@@ -40,6 +52,64 @@ impl fmt::Display for Transport {
             Transport::RtpMulticast => write!(f, "urn:x-nmos:transport:rtp.mcast"),
             Transport::Dash => write!(f, "urn:x-nmos:transport:dash"),
         }
+    }
+}
+
+#[derive(Debug)]
+pub struct ResourceCoreBuilder {
+    pub label: String,
+    pub description: Option<String>,
+    pub tags: BTreeMap<String, Vec<String>>,
+}
+
+impl ResourceCoreBuilder {
+    pub fn new<S: Into<String>>(label: S) -> Self {
+        Self {
+            label: label.into(),
+            description: None,
+            tags: BTreeMap::new(),
+        }
+    }
+
+    pub fn description<S: Into<String>>(mut self, description: S) -> Self {
+        self.description = Some(description.into());
+        self
+    }
+
+    pub fn tag<S, V>(mut self, key: S, values: V) -> Self
+    where
+        S: Into<String>,
+        V: IntoIterator<Item = S>,
+    {
+        let values: Vec<String> = values.into_iter().map(|v| v.into()).collect();
+
+        self.tags.insert(key.into(), values);
+        self
+    }
+
+    pub fn build(self) -> ResourceCore {
+        ResourceCore {
+            id: Uuid::new_v4(),
+            version: TaiTime::now(),
+            label: self.label,
+            description: self.description.unwrap_or_default(),
+            tags: self.tags,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct ResourceCore {
+    pub id: Uuid,
+    pub version: TaiTime,
+    pub label: String,
+    pub description: String,
+    pub tags: BTreeMap<String, Vec<String>>,
+}
+
+impl ResourceCore {
+    pub fn builder<S: Into<String>>(label: S) -> ResourceCoreBuilder {
+        ResourceCoreBuilder::new(label)
     }
 }
 
@@ -82,10 +152,3 @@ impl ResourceBundle {
         self.receivers.push(receiver);
     }
 }
-
-pub use device::{Device, DeviceBuilder, DeviceJson};
-pub use flow::{Flow, FlowBuilder, FlowJson};
-pub use node::{Node, NodeBuilder, NodeJson};
-pub use receiver::{Receiver, ReceiverBuilder, ReceiverJson};
-pub use sender::{Sender, SenderBuilder, SenderJson};
-pub use source::{Source, SourceBuilder, SourceJson};

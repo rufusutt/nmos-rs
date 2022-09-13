@@ -45,18 +45,25 @@ fn create_pipeline() -> Result<Pipeline, Box<dyn std::error::Error>> {
 
 fn create_node() -> Node {
     // Create NMOS node
-    let node = resource::Node::builder("http://127.0.0.1:3000/test").build();
-    let device = resource::Device::builder(&node, "type urn").build();
+    let node = resource::Node::builder("GStreamer test node", "http://127.0.0.1:3000/test").build();
+    let device = resource::Device::builder("GStreamer test device", &node, "type urn").build();
 
     // Create source and flow for video
-    let source = resource::Source::builder(&device, resource::Format::Video)
-        .description("SMPTE video test stream")
-        .build();
-    let flow = resource::Flow::builder(&source).build();
+    let source =
+        resource::Source::builder("GStreamer test source", &device, resource::Format::Video)
+            .description("SMPTE video test stream")
+            .build();
+    let flow = resource::Flow::builder("GStreamer VP8 test flow", &source).build();
 
-    let sender = resource::Sender::builder(&device, &flow, resource::Transport::RtpUnicast)
-        .manifest("file:///path/to/sdp/file")
-        .build();
+    // Create sender
+    let sender = resource::Sender::builder(
+        "GStreamer test sender",
+        &device,
+        &flow,
+        resource::Transport::RtpUnicast,
+    )
+    .manifest("file:///path/to/sdp/file")
+    .build();
 
     let mut bundle = resource::ResourceBundle::new();
     bundle.insert_node(node);

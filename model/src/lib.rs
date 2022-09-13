@@ -30,7 +30,7 @@ impl Model {
             .nodes
             .into_iter()
             .fold(HashMap::new(), |mut map, node| {
-                map.insert(node.id, node);
+                map.insert(node.core.id, node);
                 map
             });
 
@@ -39,7 +39,7 @@ impl Model {
                 .devices
                 .into_iter()
                 .fold(HashMap::new(), |mut map, device| {
-                    map.insert(device.id, device);
+                    map.insert(device.core.id, device);
                     map
                 });
 
@@ -48,7 +48,7 @@ impl Model {
                 .sources
                 .into_iter()
                 .fold(HashMap::new(), |mut map, source| {
-                    map.insert(source.id, source);
+                    map.insert(source.core.id, source);
                     map
                 });
 
@@ -56,7 +56,7 @@ impl Model {
             .flows
             .into_iter()
             .fold(HashMap::new(), |mut map, flow| {
-                map.insert(flow.id, flow);
+                map.insert(flow.core.id, flow);
                 map
             });
 
@@ -65,7 +65,7 @@ impl Model {
                 .senders
                 .into_iter()
                 .fold(HashMap::new(), |mut map, sender| {
-                    map.insert(sender.id, sender);
+                    map.insert(sender.core.id, sender);
                     map
                 });
 
@@ -74,7 +74,7 @@ impl Model {
                 .receivers
                 .into_iter()
                 .fold(HashMap::new(), |mut map, receiver| {
-                    map.insert(receiver.id, receiver);
+                    map.insert(receiver.core.id, receiver);
                     map
                 });
 
@@ -120,7 +120,7 @@ impl Model {
 
     pub async fn insert_node(&self, node: Node) -> Option<()> {
         let mut nodes = self.nodes.write().await;
-        nodes.insert(node.id, node);
+        nodes.insert(node.core.id, node);
 
         Some(())
     }
@@ -133,7 +133,7 @@ impl Model {
         }
 
         let mut devices = self.devices.write().await;
-        devices.insert(device.id, device);
+        devices.insert(device.core.id, device);
 
         Some(())
     }
@@ -146,7 +146,7 @@ impl Model {
         }
 
         let mut receivers = self.receivers.write().await;
-        receivers.insert(receiver.id, receiver);
+        receivers.insert(receiver.core.id, receiver);
 
         Some(())
     }

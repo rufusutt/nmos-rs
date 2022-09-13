@@ -6,51 +6,53 @@ use uuid::Uuid;
 
 use crate::{
     resource::{Device, Format, Transport},
-    tai::TaiTime,
     version::{is_04::V1_0, APIVersion},
 };
 
+use super::{ResourceCore, ResourceCoreBuilder};
+
 pub struct ReceiverBuilder {
-    label: Option<String>,
-    description: Option<String>,
+    core: ResourceCoreBuilder,
     format: Format,
-    tags: BTreeMap<String, Vec<String>>,
     device_id: Uuid,
     transport: Transport,
     subscription: Option<Uuid>,
 }
 
 impl ReceiverBuilder {
-    pub fn new(device: &Device, format: Format, transport: Transport) -> ReceiverBuilder {
+    pub fn new<S: Into<String>>(
+        label: S,
+        device: &Device,
+        format: Format,
+        transport: Transport,
+    ) -> ReceiverBuilder {
         ReceiverBuilder {
-            label: None,
-            description: None,
+            core: ResourceCoreBuilder::new(label),
             format,
-            tags: Default::default(),
-            device_id: device.id,
+            device_id: device.core.id,
             transport,
             subscription: None,
         }
     }
 
-    pub fn label<S: Into<String>>(mut self, label: S) -> ReceiverBuilder {
-        self.label = Some(label.into());
+    pub fn description<S: Into<String>>(mut self, description: S) -> ReceiverBuilder {
+        self.core = self.core.description(description);
         self
     }
 
-    pub fn description<S: Into<String>>(mut self, description: S) -> ReceiverBuilder {
-        self.description = Some(description.into());
+    pub fn tag<S, V>(mut self, key: S, values: V) -> Self
+    where
+        S: Into<String>,
+        V: IntoIterator<Item = S>,
+    {
+        self.core = self.core.tag(key, values);
         self
     }
 
     pub fn build(self) -> Receiver {
         Receiver {
-            id: Uuid::new_v4(),
-            version: TaiTime::now(),
-            label: self.label.unwrap_or_default(),
-            description: self.description.unwrap_or_default(),
+            core: self.core.build(),
             format: self.format,
-            tags: self.tags,
             device_id: self.device_id,
             transport: self.transport,
             subscription: self.subscription,
@@ -60,26 +62,28 @@ impl ReceiverBuilder {
 
 #[derive(Debug)]
 pub struct Receiver {
-    pub id: Uuid,
-    pub version: TaiTime,
-    pub label: String,
-    pub description: String,
+    pub core: ResourceCore,
     pub format: Format,
-    pub tags: BTreeMap<String, Vec<String>>,
     pub device_id: Uuid,
     pub transport: Transport,
     pub subscription: Option<Uuid>,
 }
 
 impl Receiver {
-    pub fn builder(device: &Device, format: Format, transport: Transport) -> ReceiverBuilder {
-        ReceiverBuilder::new(device, format, transport)
+    pub fn builder<S: Into<String>>(
+        label: S,
+        device: &Device,
+        format: Format,
+        transport: Transport,
+    ) -> ReceiverBuilder {
+        ReceiverBuilder::new(label, device, format, transport)
     }
 
     pub fn to_json(&self, api: &APIVersion) -> ReceiverJson {
         match *api {
             V1_0 => {
                 let tags = self
+                    .core
                     .tags
                     .iter()
                     .fold(BTreeMap::new(), |mut map, (key, array)| {
@@ -93,10 +97,10 @@ impl Receiver {
                 };
 
                 ReceiverJson::V1_0(is_04::v1_0_x::Receiver {
-                    id: self.id.to_string(),
-                    version: self.version.to_string(),
-                    label: self.label.clone(),
-                    description: self.description.clone(),
+                    id: self.core.id.to_string(),
+                    version: self.core.version.to_string(),
+                    label: self.core.label.clone(),
+                    description: self.core.description.clone(),
                     format: self.format.to_string(),
                     caps: Default::default(),
                     tags,

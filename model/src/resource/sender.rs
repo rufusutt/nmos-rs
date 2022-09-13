@@ -6,40 +6,46 @@ use uuid::Uuid;
 
 use crate::{
     resource::{Device, Flow, Transport},
-    tai::TaiTime,
     version::{is_04::V1_0, APIVersion},
 };
 
+use super::{ResourceCore, ResourceCoreBuilder};
+
 pub struct SenderBuilder {
-    label: Option<String>,
-    description: Option<String>,
+    core: ResourceCoreBuilder,
     flow_id: Uuid,
     transport: Transport,
-    tags: BTreeMap<String, Vec<String>>,
     device_id: Uuid,
     manifest_href: Option<String>,
 }
 
 impl SenderBuilder {
-    pub fn new(device: &Device, flow: &Flow, transport: Transport) -> SenderBuilder {
+    pub fn new<S: Into<String>>(
+        label: S,
+        device: &Device,
+        flow: &Flow,
+        transport: Transport,
+    ) -> SenderBuilder {
         SenderBuilder {
-            label: None,
-            description: None,
-            flow_id: flow.id,
+            core: ResourceCoreBuilder::new(label),
+            flow_id: flow.core.id,
             transport,
-            tags: Default::default(),
-            device_id: device.id,
+            device_id: device.core.id,
             manifest_href: None,
         }
     }
 
-    pub fn label<S: Into<String>>(mut self, label: S) -> SenderBuilder {
-        self.label = Some(label.into());
+    pub fn description<S: Into<String>>(mut self, description: S) -> SenderBuilder {
+        self.core = self.core.description(description);
         self
     }
 
-    pub fn description<S: Into<String>>(mut self, description: S) -> SenderBuilder {
-        self.description = Some(description.into());
+    pub fn tag<S, V>(mut self, key: S, values: V) -> Self
+    where
+        S: Into<String>,
+        V: IntoIterator<Item = S>,
+    {
+        self.core = self.core.tag(key, values);
         self
     }
 
@@ -51,13 +57,9 @@ impl SenderBuilder {
 
     pub fn build(self) -> Sender {
         Sender {
-            id: Uuid::new_v4(),
-            version: TaiTime::now(),
-            label: self.label.unwrap_or_default(),
-            description: self.description.unwrap_or_default(),
+            core: self.core.build(),
             flow_id: self.flow_id,
             transport: self.transport,
-            tags: self.tags,
             device_id: self.device_id,
             manifest_href: self.manifest_href.unwrap_or_default(),
         }
@@ -66,44 +68,45 @@ impl SenderBuilder {
 
 #[derive(Debug)]
 pub struct Sender {
-    pub id: Uuid,
-    pub version: TaiTime,
-    pub label: String,
-    pub description: String,
+    pub core: ResourceCore,
     pub flow_id: Uuid,
     pub transport: Transport,
-    pub tags: BTreeMap<String, Vec<String>>,
     pub device_id: Uuid,
     pub manifest_href: String,
 }
 
 impl Sender {
-    pub fn builder(device: &Device, flow: &Flow, transport: Transport) -> SenderBuilder {
-        SenderBuilder::new(device, flow, transport)
+    pub fn builder<S: Into<String>>(
+        label: S,
+        device: &Device,
+        flow: &Flow,
+        transport: Transport,
+    ) -> SenderBuilder {
+        SenderBuilder::new(label, device, flow, transport)
     }
 
     pub fn to_json(&self, api: &APIVersion) -> SenderJson {
         match *api {
             V1_0 => {
-                let tags = if !self.tags.is_empty() {
-                    Some(
-                        self.tags
-                            .iter()
-                            .fold(BTreeMap::new(), |mut map, (key, array)| {
+                let tags =
+                    if !self.core.tags.is_empty() {
+                        Some(self.core.tags.iter().fold(
+                            BTreeMap::new(),
+                            |mut map, (key, array)| {
                                 let value = serde_json::Value::from(array.clone());
                                 map.insert(key.clone(), value);
                                 map
-                            }),
-                    )
-                } else {
-                    None
-                };
+                            },
+                        ))
+                    } else {
+                        None
+                    };
 
                 SenderJson::V1_0(is_04::v1_0_x::Sender {
-                    id: self.id.to_string(),
-                    version: self.version.to_string(),
-                    label: self.label.clone(),
-                    description: self.description.clone(),
+                    id: self.core.id.to_string(),
+                    version: self.core.version.to_string(),
+                    label: self.core.label.clone(),
+                    description: self.core.description.clone(),
                     flow_id: self.flow_id.to_string(),
                     transport: self.transport.to_string(),
                     tags,

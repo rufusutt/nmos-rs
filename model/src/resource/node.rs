@@ -1,11 +1,9 @@
 use nmos_schema::is_04;
 use serde::Serialize;
-use uuid::Uuid;
 
-use crate::{
-    tai::TaiTime,
-    version::{is_04::V1_0, APIVersion},
-};
+use crate::version::{is_04::V1_0, APIVersion};
+
+use super::{ResourceCore, ResourceCoreBuilder};
 
 #[derive(Debug)]
 pub struct NodeService {
@@ -14,25 +12,20 @@ pub struct NodeService {
 }
 
 pub struct NodeBuilder {
-    label: Option<String>,
+    core: ResourceCoreBuilder,
     href: String,
     hostname: Option<String>,
     services: Vec<NodeService>,
 }
 
 impl NodeBuilder {
-    pub fn new<S: Into<String>>(href: S) -> NodeBuilder {
+    pub fn new<S: Into<String>>(label: S, href: S) -> NodeBuilder {
         NodeBuilder {
-            label: None,
+            core: ResourceCoreBuilder::new(label),
             href: href.into(),
             hostname: None,
             services: Vec::new(),
         }
-    }
-
-    pub fn label<S: Into<String>>(mut self, label: S) -> NodeBuilder {
-        self.label = Some(label.into());
-        self
     }
 
     pub fn with_service(mut self, service: NodeService) -> NodeBuilder {
@@ -42,9 +35,7 @@ impl NodeBuilder {
 
     pub fn build(self) -> Node {
         Node {
-            id: Uuid::new_v4(),
-            version: TaiTime::now(),
-            label: self.label.unwrap_or_default(),
+            core: self.core.build(),
             href: self.href,
             hostname: self.hostname,
             services: self.services,
@@ -54,17 +45,15 @@ impl NodeBuilder {
 
 #[derive(Debug)]
 pub struct Node {
-    pub id: Uuid,
-    pub version: TaiTime,
-    pub label: String,
+    pub core: ResourceCore,
     pub href: String,
     pub hostname: Option<String>,
     pub services: Vec<NodeService>,
 }
 
 impl Node {
-    pub fn builder<S: Into<String>>(href: S) -> NodeBuilder {
-        NodeBuilder::new(href)
+    pub fn builder<S: Into<String>>(label: S, href: S) -> NodeBuilder {
+        NodeBuilder::new(label, href)
     }
 
     pub fn to_json(&self, api: &APIVersion) -> NodeJson {
@@ -80,9 +69,9 @@ impl Node {
                     .collect();
 
                 NodeJson::V1_0(is_04::v1_0_x::Node {
-                    id: self.id.to_string(),
-                    version: self.version.to_string(),
-                    label: self.label.clone(),
+                    id: self.core.id.to_string(),
+                    version: self.core.version.to_string(),
+                    label: self.core.label.clone(),
                     href: self.href.clone(),
                     hostname: self.hostname.clone(),
                     caps: Default::default(),

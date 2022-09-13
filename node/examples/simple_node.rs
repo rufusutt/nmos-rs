@@ -19,9 +19,15 @@ async fn main() {
     tracing::subscriber::set_global_default(subscriber).expect("Set default subscriber");
 
     // Create our resources
-    let node = NodeBuilder::new("Test Node").build();
-    let device = DeviceBuilder::new(&node, "test type").build();
-    let receiver = ReceiverBuilder::new(&device, Format::Video, Transport::Rtp).build();
+    let node = NodeBuilder::new("Simple test node", "http://example.com").build();
+    let device = DeviceBuilder::new("Simple test device", &node, "test type").build();
+    let receiver = ReceiverBuilder::new(
+        "Simple test receiver",
+        &device,
+        Format::Video,
+        Transport::Rtp,
+    )
+    .build();
 
     // Place inside bundle
     let mut resources = ResourceBundle::new();
