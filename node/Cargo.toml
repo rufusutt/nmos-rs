@@ -1,11 +1,16 @@
 [package]
-name = "nmos-rs-node"
+name = "nmos-node"
 version = "0.1.0"
+authors = ["Rufus Uttley <rufusuttley@live.co.uk>"]
 edition = "2021"
+homepage = "https://github.com/rufusutt/nmos-rs"
+repository = "https://github.com/rufusutt/nmos-rs"
+license = "Apache-2.0"
+rust-version = "1.56"
 
 [dependencies]
-nmos-rs-schema = { path = "../schema" }
-nmos-rs-model = { path = "../model" }
+nmos-schema = { path = "../schema" }
+nmos-model = { path = "../model" }
 async-trait = "0.1"
 axum = { version = "0.5", default-features = false, features = ["http1", "json", "original-uri", "tower-log"] }
 futures = "0.3"

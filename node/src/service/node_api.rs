@@ -4,12 +4,12 @@ use std::sync::Arc;
 use axum::extract::Path;
 use axum::http::StatusCode;
 use axum::{Extension, Json};
-use nmos_rs_model::resource::{
+use nmos_model::resource::{
     DeviceJson, FlowJson, NodeJson, ReceiverJson, SenderJson, SourceJson,
 };
-use nmos_rs_model::version::is_04::V1_0;
-use nmos_rs_model::version::APIVersion;
-use nmos_rs_model::Model;
+use nmos_model::version::is_04::V1_0;
+use nmos_model::version::APIVersion;
+use nmos_model::Model;
 use uuid::Uuid;
 
 use super::ServiceError;

@@ -1,10 +1,15 @@
 [package]
-name = "nmos-rs-model"
+name = "nmos-model"
 version = "0.1.0"
+authors = ["Rufus Uttley <rufusuttley@live.co.uk>"]
 edition = "2021"
+homepage = "https://github.com/rufusutt/nmos-rs"
+repository = "https://github.com/rufusutt/nmos-rs"
+license = "Apache-2.0"
+rust-version = "1.56"
 
 [dependencies]
-nmos-rs-schema = { path = "../schema" }
+nmos-schema = { path = "../schema" }
 tokio = { version = "1", features = ["sync"] }
 uuid = { version = "1", features = ["v4"] }
 serde = "1"

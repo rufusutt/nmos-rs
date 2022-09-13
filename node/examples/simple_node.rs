@@ -1,8 +1,8 @@
-use nmos_rs_model::resource::{
+use nmos_model::resource::{
     DeviceBuilder, Format, NodeBuilder, ReceiverBuilder, ResourceBundle, Transport,
 };
-use nmos_rs_node::async_trait;
-use nmos_rs_node::node::{EventHandler, Node};
+use nmos_node::async_trait;
+use nmos_node::{EventHandler, Node};
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
 

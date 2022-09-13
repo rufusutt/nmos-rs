@@ -17,7 +17,7 @@ fn crawl(value: &mut Value, definitions: &mut Map<String, Value>, root_path: &Pa
                 let ref_path = v.as_str().expect("Ref is not a string");
 
                 // Ignore relative paths
-                if ref_path.starts_with("#") {
+                if ref_path.starts_with('#') {
                     return;
                 }
 
@@ -60,7 +60,7 @@ fn flatten_schema(root_schema: &mut Value) {
     // Create new object for definitions
     let mut definitions = Map::new();
 
-    crawl(root_schema, &mut definitions, &Path::new(""));
+    crawl(root_schema, &mut definitions, Path::new(""));
 
     // Get root as object
     let root_object = root_schema.as_object_mut().expect("Root is not an object");

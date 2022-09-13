@@ -1,4 +1,4 @@
-use nmos_rs_schema::is_04;
+use nmos_schema::is_04;
 use serde::Serialize;
 use uuid::Uuid;
 

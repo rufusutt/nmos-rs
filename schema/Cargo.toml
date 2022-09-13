@@ -1,7 +1,12 @@
 [package]
-name = "nmos-rs-schema"
+name = "nmos-schema"
 version = "0.1.0"
+authors = ["Rufus Uttley <rufusuttley@live.co.uk>"]
 edition = "2021"
+homepage = "https://github.com/rufusutt/nmos-rs"
+repository = "https://github.com/rufusutt/nmos-rs"
+license = "Apache-2.0"
+rust-version = "1.56"
 
 [dependencies]
 schemafy = "0.6"

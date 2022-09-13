@@ -13,7 +13,7 @@ use axum::{
 };
 use error::ServiceError;
 use futures::Future;
-use nmos_rs_model::Model;
+use nmos_model::Model;
 use serde_json::json;
 use tower::Service;
 

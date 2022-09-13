@@ -1,7 +1,7 @@
 use gst::{prelude::*, Pipeline};
 use gstreamer as gst;
-use nmos_rs_model::resource;
-use nmos_rs_node::node::Node;
+use nmos_model::resource;
+use nmos_node::Node;
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
 
@@ -55,7 +55,7 @@ fn create_node() -> Node {
     let flow = resource::Flow::builder(&source).build();
 
     let sender = resource::Sender::builder(&device, &flow, resource::Transport::RtpUnicast)
-        .manifest("file:///home/rufus/Development/nmos-rs-workspace/nmos-rs/test.sdp")
+        .manifest("file:///path/to/sdp/file")
         .build();
 
     let mut bundle = resource::ResourceBundle::new();

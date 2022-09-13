@@ -3,7 +3,7 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
-use nmos_rs_schema::is_04;
+use nmos_schema::is_04;
 
 #[derive(Debug)]
 pub struct ServiceError {

@@ -7,7 +7,7 @@ use std::{
     time::Duration,
 };
 
-use nmos_rs_model::version::APIVersion;
+use nmos_model::version::APIVersion;
 use reqwest::Url;
 use tokio::sync::mpsc::{self, UnboundedSender};
 use tracing::{error, info};
