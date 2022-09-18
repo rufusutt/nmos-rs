@@ -46,7 +46,9 @@ fn create_pipeline() -> Result<Pipeline, Box<dyn std::error::Error>> {
 fn create_node() -> Node {
     // Create NMOS node
     let node = resource::Node::builder("GStreamer test node", "http://127.0.0.1:3000/test").build();
-    let device = resource::Device::builder("GStreamer test device", &node, "type urn").build();
+    let device =
+        resource::Device::builder("GStreamer test device", &node, "urn:x-nmos:device:generic")
+            .build();
 
     // Create source and flow for video
     let source =
@@ -91,12 +93,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create NMOS node
     let node = create_node();
 
-    // Create async runtime for NMOS node
-    let runtime = tokio::runtime::Builder::new_multi_thread()
-        .enable_all()
-        .build()
-        .unwrap();
-
     // Start pipeline on separate thread
     std::thread::spawn(move || {
         // Get bus
@@ -139,8 +135,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .expect("Unable to set Null state");
     });
 
-    // Run node on async runtime
-    runtime.block_on(node.start())?;
+    // Run node
+    node.start_blocking()?;
 
     Ok(())
 }
