@@ -113,14 +113,14 @@ pub struct MdnsContext {
     // Browsers and services
     register_browser: Option<MdnsBrowser>,
     node_service: Option<MdnsService>,
-    query_service: Option<MdnsService>,
+    _query_service: Option<MdnsService>,
 }
 
 #[derive(Debug)]
 pub enum NmosMdnsService {
     Node,
     Registration,
-    Query,
+    _Query,
 }
 
 #[derive(Debug)]
@@ -176,7 +176,7 @@ impl MdnsContext {
             .expect("Unable to send MDNS event");
     }
 
-    pub fn new(config: &NmosMdnsConfig, tx: mpsc::UnboundedSender<NmosMdnsEvent>) -> MdnsContext {
+    pub fn new(_config: &NmosMdnsConfig, tx: mpsc::UnboundedSender<NmosMdnsEvent>) -> MdnsContext {
         // Create registration browser
         let mut register_browser =
             MdnsBrowser::new(ServiceType::new("nmos-register", "tcp").unwrap());
@@ -200,7 +200,7 @@ impl MdnsContext {
         MdnsContext {
             register_browser: Some(register_browser),
             node_service: Some(node_service),
-            query_service: None,
+            _query_service: None,
         }
     }
 

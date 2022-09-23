@@ -60,7 +60,7 @@ impl NodeBuilder {
         let service = NmosService::new(model.clone());
 
         Node {
-            event_handler: self.event_handler,
+            _event_handler: self.event_handler,
             model,
             service,
         }
@@ -68,7 +68,7 @@ impl NodeBuilder {
 }
 
 pub struct Node {
-    event_handler: Option<Arc<dyn EventHandler>>,
+    _event_handler: Option<Arc<dyn EventHandler>>,
     model: Arc<Model>,
     service: NmosService,
 }
@@ -98,9 +98,7 @@ impl Node {
 
         // TODO: Must find better way of representing multiple API
         // version in JSON. For now this will look like a mess.
-        let node_json = match node.to_json(&V1_0) {
-            resource::NodeJson::V1_0(json) => json,
-        };
+        let resource::NodeJson::V1_0(node_json) = node.to_json(&V1_0);
 
         // Construct POST request
         let node_post_request = RegistrationapiResourcePostRequestHealthVariant0 {
@@ -124,9 +122,7 @@ impl Node {
             RegistrationapiResourcePostRequest, RegistrationapiResourcePostRequestHealthVariant1,
         };
 
-        let device_json = match device.to_json(&V1_0) {
-            resource::DeviceJson::V1_0(json) => json,
-        };
+        let resource::DeviceJson::V1_0(device_json) = device.to_json(&V1_0);
         let device_post_request = RegistrationapiResourcePostRequestHealthVariant1 {
             data: Some(device_json),
             type_: Some(String::from("device")),
@@ -148,9 +144,7 @@ impl Node {
             RegistrationapiResourcePostRequest, RegistrationapiResourcePostRequestHealthVariant4,
         };
 
-        let source_json = match source.to_json(&V1_0) {
-            resource::SourceJson::V1_0(json) => json,
-        };
+        let resource::SourceJson::V1_0(source_json) = source.to_json(&V1_0);
         let source_post_request = RegistrationapiResourcePostRequestHealthVariant4 {
             data: Some(source_json),
             type_: Some(String::from("source")),
@@ -172,9 +166,7 @@ impl Node {
             RegistrationapiResourcePostRequest, RegistrationapiResourcePostRequestHealthVariant5,
         };
 
-        let flow_json = match flow.to_json(&V1_0) {
-            resource::FlowJson::V1_0(json) => json,
-        };
+        let resource::FlowJson::V1_0(flow_json) = flow.to_json(&V1_0);
         let flow_post_request = RegistrationapiResourcePostRequestHealthVariant5 {
             data: Some(flow_json),
             type_: Some(String::from("flow")),
@@ -196,9 +188,7 @@ impl Node {
             RegistrationapiResourcePostRequest, RegistrationapiResourcePostRequestHealthVariant2,
         };
 
-        let sender_json = match sender.to_json(&V1_0) {
-            resource::SenderJson::V1_0(json) => json,
-        };
+        let resource::SenderJson::V1_0(sender_json) = sender.to_json(&V1_0);
         let sender_post_request = RegistrationapiResourcePostRequestHealthVariant2 {
             data: Some(sender_json),
             type_: Some(String::from("sender")),
@@ -220,9 +210,7 @@ impl Node {
             RegistrationapiResourcePostRequest, RegistrationapiResourcePostRequestHealthVariant3,
         };
 
-        let receiver_json = match receiver.to_json(&V1_0) {
-            resource::ReceiverJson::V1_0(json) => json,
-        };
+        let resource::ReceiverJson::V1_0(receiver_json) = receiver.to_json(&V1_0);
         let receiver_post_request = RegistrationapiResourcePostRequestHealthVariant3 {
             data: Some(receiver_json),
             type_: Some(String::from("receiver")),
@@ -354,7 +342,7 @@ impl Node {
                 // Get heartbeat endpoint from node id
                 let heartbeat_url = {
                     let nodes = self.model.nodes().await;
-                    let node_id = nodes.iter().next().unwrap().0.clone();
+                    let node_id = *nodes.iter().next().unwrap().0;
 
                     let base = &registry.url.join("v1.0/").unwrap();
                     base.join(&format!("health/nodes/{}", node_id)).unwrap()

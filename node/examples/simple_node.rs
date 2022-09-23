@@ -1,15 +1,9 @@
 use nmos_model::resource::{
     DeviceBuilder, Format, NodeBuilder, ReceiverBuilder, ResourceBundle, Transport,
 };
-use nmos_node::async_trait;
-use nmos_node::{EventHandler, Node};
+use nmos_node::Node;
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
-
-struct Handler;
-
-#[async_trait]
-impl EventHandler for Handler {}
 
 #[tokio::main]
 async fn main() {
@@ -19,8 +13,8 @@ async fn main() {
     tracing::subscriber::set_global_default(subscriber).expect("Set default subscriber");
 
     // Create our resources
-    let node = NodeBuilder::new("Simple test node", "http://example.com").build();
-    let device = DeviceBuilder::new("Simple test device", &node, "test type").build();
+    let node = NodeBuilder::new("Simple test node", "http://127.0.0.1:3000/").build();
+    let device = DeviceBuilder::new("Simple test device", &node, "urn:x-nmos:device:generic").build();
     let receiver = ReceiverBuilder::new(
         "Simple test receiver",
         &device,
@@ -36,9 +30,7 @@ async fn main() {
     resources.insert_receiver(receiver);
 
     // Create node
-    let node = Node::builder_from_resources(resources)
-        .event_handler(Handler)
-        .build();
+    let node = Node::builder_from_resources(resources).build();
 
     if let Err(e) = node.start().await {
         println!("Node error: {:?}", e);
