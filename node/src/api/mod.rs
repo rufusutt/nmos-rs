@@ -1,5 +1,6 @@
 mod error;
-mod node_api;
+mod node;
+mod registration;
 
 use std::convert::Infallible;
 use std::pin::Pin;
@@ -17,17 +18,19 @@ use nmos_model::Model;
 use serde_json::json;
 use tower::Service;
 
-use self::node_api::{
+use self::node::{
     get_device, get_devices, get_flow, get_flows, get_receiver, get_receivers, get_self,
     get_sender, get_senders, get_source, get_sources,
 };
 
+pub use registration::RegistrationApi;
+
 #[derive(Debug, Clone)]
-pub struct NmosService {
+pub struct NodeApi {
     router: Router,
 }
 
-impl NmosService {
+impl NodeApi {
     pub fn new(model: Arc<Model>) -> Self {
         let router = Router::new()
             .route(
@@ -74,7 +77,7 @@ async fn fallback_handler(OriginalUri(uri): OriginalUri) -> ServiceError {
     )
 }
 
-impl Service<Request<Body>> for NmosService {
+impl Service<Request<Body>> for NodeApi {
     type Response = Response;
     type Error = Infallible;
     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
