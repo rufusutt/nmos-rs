@@ -1,6 +1,8 @@
 # nmos-rs
 
-`nmos-rs` is a WIP Rust implementation of the AMWA Networked Media Open Specifications (NMOS) API.
+`nmos-rs` is a WIP Rust implementation of the AMWA Networked Media Open Specifications (NMOS) APIs.
+The project aims to create an NMOS Node library which is performant, while being super easy to work with.
+Currently only the IS-04 v1.0 specification is implemented.
 
 ## Repo Overview
 

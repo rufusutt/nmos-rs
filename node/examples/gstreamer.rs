@@ -46,9 +46,12 @@ fn create_pipeline() -> Result<Pipeline, Box<dyn std::error::Error>> {
 fn create_node() -> Node {
     // Create NMOS node
     let node = resource::Node::builder("GStreamer test node", "http://127.0.0.1:3000/test").build();
-    let device =
-        resource::Device::builder("GStreamer test device", &node, "urn:x-nmos:device:generic")
-            .build();
+    let device = resource::Device::builder(
+        "GStreamer test device",
+        &node,
+        resource::DeviceType::Generic,
+    )
+    .build();
 
     // Create source and flow for video
     let source =

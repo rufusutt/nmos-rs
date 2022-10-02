@@ -1,5 +1,5 @@
 use nmos_model::resource::{
-    DeviceBuilder, Format, NodeBuilder, ReceiverBuilder, ResourceBundle, Transport,
+    DeviceBuilder, DeviceType, Format, NodeBuilder, ReceiverBuilder, ResourceBundle, Transport,
 };
 use nmos_node::Node;
 use tracing::Level;
@@ -7,6 +7,7 @@ use tracing_subscriber::FmtSubscriber;
 
 #[tokio::main]
 async fn main() {
+    // Set up logging output
     let subscriber = FmtSubscriber::builder()
         .with_max_level(Level::INFO)
         .finish();
@@ -14,7 +15,7 @@ async fn main() {
 
     // Create our resources
     let node = NodeBuilder::new("Simple test node", "http://127.0.0.1:3000/").build();
-    let device = DeviceBuilder::new("Simple test device", &node, "urn:x-nmos:device:generic").build();
+    let device = DeviceBuilder::new("Simple test device", &node, DeviceType::Generic).build();
     let receiver = ReceiverBuilder::new(
         "Simple test receiver",
         &device,

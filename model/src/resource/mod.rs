@@ -1,9 +1,8 @@
-use core::fmt;
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, fmt};
 
 use uuid::Uuid;
 
-pub use device::{Device, DeviceBuilder, DeviceJson};
+pub use device::{Device, DeviceBuilder, DeviceJson, DeviceType};
 pub use flow::{Flow, FlowBuilder, FlowJson};
 pub use node::{Node, NodeBuilder, NodeJson};
 pub use receiver::{Receiver, ReceiverBuilder, ReceiverJson};
