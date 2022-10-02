@@ -14,11 +14,12 @@ jobs:
         # Install Avahi and all GStreamer
         # Note: Installing so many GStreamer plugins is most certaily overkill
       - name: Install dependencies
-        run: sudo apt-get install -y avahi-daemon libavahi-client-dev \
-              libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
-              gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
-              gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly \
-              gstreamer1.0-libav libgstrtspserver-1.0-dev libges-1.0-dev
+        run: |
+          sudo apt-get install -y avahi-daemon libavahi-client-dev \
+            libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+            gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+            gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly \
+            gstreamer1.0-libav libgstrtspserver-1.0-dev libges-1.0-dev
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
