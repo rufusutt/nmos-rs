@@ -26,6 +26,7 @@ impl fmt::Display for DeviceType {
     }
 }
 
+#[must_use]
 pub struct DeviceBuilder {
     core: ResourceCoreBuilder,
     type_: DeviceType,
@@ -33,7 +34,7 @@ pub struct DeviceBuilder {
 }
 
 impl DeviceBuilder {
-    pub fn new<S: Into<String>>(label: S, node: &Node, device_type: DeviceType) -> DeviceBuilder {
+    pub fn new<S: Into<String>>(label: S, node: &Node, device_type: DeviceType) -> Self {
         DeviceBuilder {
             core: ResourceCoreBuilder::new(label),
             type_: device_type,
@@ -41,6 +42,7 @@ impl DeviceBuilder {
         }
     }
 
+    #[must_use]
     pub fn build(self) -> Device {
         Device {
             core: self.core.build(),
@@ -62,18 +64,23 @@ pub struct Device {
 }
 
 impl Device {
-    pub fn builder<S: Into<String>>(label: S, node: &Node, device_type: DeviceType) -> DeviceBuilder {
+    pub fn builder<S: Into<String>>(
+        label: S,
+        node: &Node,
+        device_type: DeviceType,
+    ) -> DeviceBuilder {
         DeviceBuilder::new(label, node, device_type)
     }
 
+    #[must_use]
     pub fn to_json(&self, api: &APIVersion) -> DeviceJson {
         match *api {
             V1_0 => {
                 // Senders
-                let senders = self.senders.iter().map(|s| s.to_string()).collect();
+                let senders = self.senders.iter().map(ToString::to_string).collect();
 
                 // Receivers
-                let receivers = self.receivers.iter().map(|r| r.to_string()).collect();
+                let receivers = self.receivers.iter().map(ToString::to_string).collect();
 
                 DeviceJson::V1_0(is_04::v1_0_x::Device {
                     id: self.core.id.to_string(),

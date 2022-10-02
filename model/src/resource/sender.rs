@@ -11,6 +11,7 @@ use crate::{
 
 use super::{ResourceCore, ResourceCoreBuilder};
 
+#[must_use]
 pub struct SenderBuilder {
     core: ResourceCoreBuilder,
     flow_id: Uuid,
@@ -25,7 +26,7 @@ impl SenderBuilder {
         device: &Device,
         flow: &Flow,
         transport: Transport,
-    ) -> SenderBuilder {
+    ) -> Self {
         SenderBuilder {
             core: ResourceCoreBuilder::new(label),
             flow_id: flow.core.id,
@@ -35,7 +36,7 @@ impl SenderBuilder {
         }
     }
 
-    pub fn description<S: Into<String>>(mut self, description: S) -> SenderBuilder {
+    pub fn description<S: Into<String>>(mut self, description: S) -> Self {
         self.core = self.core.description(description);
         self
     }
@@ -49,12 +50,13 @@ impl SenderBuilder {
         self
     }
 
-    pub fn manifest<S: Into<String>>(mut self, manifest: S) -> SenderBuilder {
+    pub fn manifest<S: Into<String>>(mut self, manifest: S) -> Self {
         // TODO: Store manifest and generate href
         self.manifest_href = Some(manifest.into());
         self
     }
 
+    #[must_use]
     pub fn build(self) -> Sender {
         Sender {
             core: self.core.build(),
@@ -85,11 +87,14 @@ impl Sender {
         SenderBuilder::new(label, device, flow, transport)
     }
 
+    #[must_use]
     pub fn to_json(&self, api: &APIVersion) -> SenderJson {
         match *api {
             V1_0 => {
                 let tags =
-                    if !self.core.tags.is_empty() {
+                    if self.core.tags.is_empty() {
+                        None
+                    } else {
                         Some(self.core.tags.iter().fold(
                             BTreeMap::new(),
                             |mut map, (key, array)| {
@@ -98,8 +103,6 @@ impl Sender {
                                 map
                             },
                         ))
-                    } else {
-                        None
                     };
 
                 SenderJson::V1_0(is_04::v1_0_x::Sender {

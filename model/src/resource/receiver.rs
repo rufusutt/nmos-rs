@@ -11,6 +11,7 @@ use crate::{
 
 use super::{ResourceCore, ResourceCoreBuilder};
 
+#[must_use]
 pub struct ReceiverBuilder {
     core: ResourceCoreBuilder,
     format: Format,
@@ -25,7 +26,7 @@ impl ReceiverBuilder {
         device: &Device,
         format: Format,
         transport: Transport,
-    ) -> ReceiverBuilder {
+    ) -> Self {
         ReceiverBuilder {
             core: ResourceCoreBuilder::new(label),
             format,
@@ -35,7 +36,7 @@ impl ReceiverBuilder {
         }
     }
 
-    pub fn description<S: Into<String>>(mut self, description: S) -> ReceiverBuilder {
+    pub fn description<S: Into<String>>(mut self, description: S) -> Self {
         self.core = self.core.description(description);
         self
     }
@@ -49,6 +50,7 @@ impl ReceiverBuilder {
         self
     }
 
+    #[must_use]
     pub fn build(self) -> Receiver {
         Receiver {
             core: self.core.build(),
@@ -79,6 +81,7 @@ impl Receiver {
         ReceiverBuilder::new(label, device, format, transport)
     }
 
+    #[must_use]
     pub fn to_json(&self, api: &APIVersion) -> ReceiverJson {
         match *api {
             V1_0 => {
@@ -102,7 +105,7 @@ impl Receiver {
                     label: self.core.label.clone(),
                     description: self.core.description.clone(),
                     format: self.format.to_string(),
-                    caps: Default::default(),
+                    caps: BTreeMap::default(),
                     tags,
                     device_id: self.device_id.to_string(),
                     transport: self.transport.to_string(),

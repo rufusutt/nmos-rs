@@ -11,6 +11,7 @@ use crate::{
 
 use super::{ResourceCore, ResourceCoreBuilder};
 
+#[must_use]
 pub struct FlowBuilder {
     core: ResourceCoreBuilder,
     format: Format,
@@ -19,7 +20,7 @@ pub struct FlowBuilder {
 }
 
 impl FlowBuilder {
-    pub fn new<S: Into<String>>(label: S, source: &Source) -> FlowBuilder {
+    pub fn new<S: Into<String>>(label: S, source: &Source) -> Self {
         FlowBuilder {
             core: ResourceCoreBuilder::new(label),
             format: source.format,
@@ -28,7 +29,7 @@ impl FlowBuilder {
         }
     }
 
-    pub fn description<S: Into<String>>(mut self, description: S) -> FlowBuilder {
+    pub fn description<S: Into<String>>(mut self, description: S) -> Self {
         self.core = self.core.description(description);
         self
     }
@@ -42,6 +43,7 @@ impl FlowBuilder {
         self
     }
 
+    #[must_use]
     pub fn build(self) -> Flow {
         Flow {
             core: self.core.build(),
@@ -65,6 +67,7 @@ impl Flow {
         FlowBuilder::new(label, source)
     }
 
+    #[must_use]
     pub fn to_json(&self, api: &APIVersion) -> FlowJson {
         match *api {
             V1_0 => {
@@ -79,7 +82,7 @@ impl Flow {
                         map
                     });
 
-                let parents = self.parents.iter().map(|p| p.to_string()).collect();
+                let parents = self.parents.iter().map(ToString::to_string).collect();
 
                 FlowJson::V1_0(is_04::v1_0_x::Flow {
                     id: self.core.id.to_string(),

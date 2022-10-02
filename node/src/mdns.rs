@@ -137,7 +137,7 @@ impl MdnsContext {
     fn on_service_discovered(
         service: NmosMdnsService,
         result: zeroconf::Result<ServiceDiscovery>,
-        context: Option<Arc<dyn Any>>,
+        context: &Option<Arc<dyn Any>>,
     ) {
         match &result {
             Ok(d) => info!("Discovered service: {:?}", d),
@@ -158,7 +158,7 @@ impl MdnsContext {
     fn register_callback(
         service: NmosMdnsService,
         result: zeroconf::Result<ServiceRegistration>,
-        context: Option<Arc<dyn Any>>,
+        context: &Option<Arc<dyn Any>>,
     ) {
         match &result {
             Ok(r) => info!("{} service registered", r.service_type().to_string()),
@@ -183,7 +183,7 @@ impl MdnsContext {
 
         register_browser.set_context(Box::new(tx.clone()));
         register_browser.set_service_discovered_callback(Box::new(|r, c| {
-            Self::on_service_discovered(NmosMdnsService::Registration, r, c)
+            Self::on_service_discovered(NmosMdnsService::Registration, r, &c);
         }));
 
         // Create node service
@@ -194,7 +194,7 @@ impl MdnsContext {
         node_service.set_txt_record(txt_record);
         node_service.set_context(Box::new(tx));
         node_service.set_registered_callback(Box::new(|r, c| {
-            Self::register_callback(NmosMdnsService::Node, r, c)
+            Self::register_callback(NmosMdnsService::Node, r, &c);
         }));
 
         MdnsContext {

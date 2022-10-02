@@ -17,10 +17,7 @@ fn file_name_to_key(file_path: &str) -> String {
 
 fn crawl(value: &mut Value, definitions: &mut Map<String, Value>, current_path: &Path) {
     match value {
-        Value::Null => {}
-        Value::Bool(_) => {}
-        Value::Number(_) => {}
-        Value::String(_) => {}
+        Value::Null | Value::Bool(_) | Value::Number(_) | Value::String(_) => {}
         Value::Array(array) => array
             .iter_mut()
             .for_each(|v| crawl(v, definitions, current_path)),
@@ -143,9 +140,10 @@ fn create_root_schema<P: AsRef<Path>>(path: P) -> Value {
 
 fn main() {
     // Fetch schemas from AMWA repository via submodules
-    let _ = Command::new("git")
+    Command::new("git")
         .args(&["submodule", "update", "--init"])
-        .status();
+        .status()
+        .expect("Failed to update submodules");
 
     // Get manifest dir from env
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();

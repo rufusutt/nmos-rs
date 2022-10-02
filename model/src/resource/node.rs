@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use nmos_schema::is_04;
 use serde::Serialize;
 
@@ -11,6 +13,7 @@ pub struct NodeService {
     pub type_: String,
 }
 
+#[must_use]
 pub struct NodeBuilder {
     core: ResourceCoreBuilder,
     href: String,
@@ -19,7 +22,7 @@ pub struct NodeBuilder {
 }
 
 impl NodeBuilder {
-    pub fn new<S: Into<String>>(label: S, href: S) -> NodeBuilder {
+    pub fn new<S: Into<String>>(label: S, href: S) -> Self {
         NodeBuilder {
             core: ResourceCoreBuilder::new(label),
             href: href.into(),
@@ -28,11 +31,12 @@ impl NodeBuilder {
         }
     }
 
-    pub fn with_service(mut self, service: NodeService) -> NodeBuilder {
+    pub fn with_service(mut self, service: NodeService) -> Self {
         self.services.push(service);
         self
     }
 
+    #[must_use]
     pub fn build(self) -> Node {
         Node {
             core: self.core.build(),
@@ -56,6 +60,7 @@ impl Node {
         NodeBuilder::new(label, href)
     }
 
+    #[must_use]
     pub fn to_json(&self, api: &APIVersion) -> NodeJson {
         match *api {
             V1_0 => {
@@ -74,7 +79,7 @@ impl Node {
                     label: self.core.label.clone(),
                     href: self.href.clone(),
                     hostname: self.hostname.clone(),
-                    caps: Default::default(),
+                    caps: BTreeMap::default(),
                     services,
                 })
             }

@@ -55,6 +55,7 @@ impl fmt::Display for Transport {
 }
 
 #[derive(Debug)]
+#[must_use]
 pub struct ResourceCoreBuilder {
     pub label: String,
     pub description: Option<String>,
@@ -80,12 +81,13 @@ impl ResourceCoreBuilder {
         S: Into<String>,
         V: IntoIterator<Item = S>,
     {
-        let values: Vec<String> = values.into_iter().map(|v| v.into()).collect();
+        let values: Vec<String> = values.into_iter().map(Into::into).collect();
 
         self.tags.insert(key.into(), values);
         self
     }
 
+    #[must_use]
     pub fn build(self) -> ResourceCore {
         ResourceCore {
             id: Uuid::new_v4(),
@@ -123,6 +125,7 @@ pub struct ResourceBundle {
 }
 
 impl ResourceBundle {
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }

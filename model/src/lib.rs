@@ -20,10 +20,12 @@ pub struct Model {
 }
 
 impl Model {
+    #[must_use]
     pub fn new() -> Self {
-        Default::default()
+        Model::default()
     }
 
+    #[must_use]
     pub fn from_resources(resource_bundle: ResourceBundle) -> Self {
         // Fold each resource vec into a hashmap
         let nodes = resource_bundle

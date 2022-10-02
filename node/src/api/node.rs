@@ -4,9 +4,7 @@ use std::sync::Arc;
 use axum::extract::Path;
 use axum::http::StatusCode;
 use axum::{Extension, Json};
-use nmos_model::resource::{
-    DeviceJson, FlowJson, NodeJson, ReceiverJson, SenderJson, SourceJson,
-};
+use nmos_model::resource::{DeviceJson, FlowJson, NodeJson, ReceiverJson, SenderJson, SourceJson};
 use nmos_model::version::is_04::V1_0;
 use nmos_model::version::APIVersion;
 use nmos_model::Model;

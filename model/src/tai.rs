@@ -9,6 +9,7 @@ pub struct TaiTime {
 }
 
 impl TaiTime {
+    #[must_use]
     pub fn now() -> TaiTime {
         let tai_offset = Duration::from_secs(37);
 

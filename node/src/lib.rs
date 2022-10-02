@@ -24,6 +24,7 @@ use api::{NodeApi, RegistrationApi};
 use mdns::{NmosMdnsConfig, NmosMdnsEvent, NmosMdnsRegistry};
 
 #[derive(Default)]
+#[must_use]
 pub struct NodeBuilder {
     model: Model,
     event_handler: Option<Arc<dyn EventHandler>>,
@@ -79,6 +80,7 @@ impl Node {
         NodeBuilder::from_resources(resource_bundle)
     }
 
+    #[must_use]
     pub fn model(&self) -> Arc<Model> {
         self.model.clone()
     }

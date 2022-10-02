@@ -11,6 +11,7 @@ use crate::{
 
 use super::{ResourceCore, ResourceCoreBuilder};
 
+#[must_use]
 pub struct SourceBuilder {
     core: ResourceCoreBuilder,
     format: Format,
@@ -19,7 +20,7 @@ pub struct SourceBuilder {
 }
 
 impl SourceBuilder {
-    pub fn new<S: Into<String>>(label: S, device: &Device, format: Format) -> SourceBuilder {
+    pub fn new<S: Into<String>>(label: S, device: &Device, format: Format) -> Self {
         SourceBuilder {
             core: ResourceCoreBuilder::new(label),
             format,
@@ -28,11 +29,12 @@ impl SourceBuilder {
         }
     }
 
-    pub fn description<S: Into<String>>(mut self, description: S) -> SourceBuilder {
+    pub fn description<S: Into<String>>(mut self, description: S) -> Self {
         self.core = self.core.description(description);
         self
     }
 
+    #[must_use]
     pub fn build(self) -> Source {
         Source {
             core: self.core.build(),
@@ -56,6 +58,7 @@ impl Source {
         SourceBuilder::new(label, device, format)
     }
 
+    #[must_use]
     pub fn to_json(&self, api: &APIVersion) -> SourceJson {
         match *api {
             V1_0 => {
@@ -69,7 +72,7 @@ impl Source {
                         map
                     });
 
-                let parents = self.parents.iter().map(|p| p.to_string()).collect();
+                let parents = self.parents.iter().map(ToString::to_string).collect();
 
                 SourceJson::V1_0(is_04::v1_0_x::Source {
                     id: self.core.id.to_string(),
@@ -77,7 +80,7 @@ impl Source {
                     label: self.core.label.clone(),
                     description: self.core.description.clone(),
                     format: self.format.to_string(),
-                    caps: Default::default(),
+                    caps: BTreeMap::default(),
                     tags,
                     device_id: self.device_id.to_string(),
                     parents,
