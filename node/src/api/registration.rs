@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use nmos_model::{resource, Model};
+use tokio::sync::RwLock;
 use tracing::info;
 
 use crate::mdns::NmosMdnsRegistry;
@@ -146,7 +147,7 @@ impl RegistrationApi {
 
     pub async fn register_resources(
         client: &reqwest::Client,
-        model: Arc<Model>,
+        model: Arc<RwLock<Model>>,
         registry: &NmosMdnsRegistry,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let base = &registry.url.join("v1.0/").unwrap();
@@ -156,25 +157,27 @@ impl RegistrationApi {
         // Resource endpoint
         let resource_url = &base.join("resource").unwrap();
 
+        // Get read-only model
+        let model = model.read().await;
+
         // Get node
-        let nodes = model.nodes().await;
-        let node = nodes.iter().next().unwrap().1;
+        let node = model.nodes.iter().next().unwrap().1;
 
         // Register resources in order
         Self::register_node(client, resource_url, node).await?;
-        for (_, device) in model.devices().await.iter() {
+        for device in model.devices.values() {
             Self::register_device(client, resource_url, device).await?;
         }
-        for (_, source) in model.sources().await.iter() {
+        for source in model.sources.values() {
             Self::register_source(client, resource_url, source).await?;
         }
-        for (_, flow) in model.flows().await.iter() {
+        for flow in model.flows.values() {
             Self::register_flow(client, resource_url, flow).await?;
         }
-        for (_, sender) in model.senders().await.iter() {
+        for sender in model.senders.values() {
             Self::register_sender(client, resource_url, sender).await?;
         }
-        for (_, receiver) in model.receivers().await.iter() {
+        for receiver in model.receivers.values() {
             Self::register_receiver(client, resource_url, receiver).await?;
         }
 

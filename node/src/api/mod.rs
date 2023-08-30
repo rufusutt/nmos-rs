@@ -16,6 +16,7 @@ use error::ServiceError;
 use futures::Future;
 use nmos_model::Model;
 use serde_json::json;
+use tokio::sync::RwLock;
 use tower::Service;
 
 use self::node::{
@@ -31,7 +32,7 @@ pub struct NodeApi {
 }
 
 impl NodeApi {
-    pub fn new(model: Arc<Model>) -> Self {
+    pub fn new(model: Arc<RwLock<Model>>) -> Self {
         let router = Router::new()
             .route(
                 "/",

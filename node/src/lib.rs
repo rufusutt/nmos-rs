@@ -6,7 +6,7 @@ use mdns::MdnsContext;
 use nmos_model::{resource::ResourceBundle, Model};
 use tokio::{
     runtime::Runtime,
-    sync::{mpsc, Mutex},
+    sync::{mpsc, Mutex, RwLock},
 };
 use tower::{make::Shared, ServiceBuilder};
 use tower_http::cors::{self, CorsLayer};
@@ -52,7 +52,7 @@ impl NodeBuilder {
 
     pub fn build(self) -> Node {
         // Wrap model in Arc
-        let model = Arc::new(self.model);
+        let model = Arc::new(RwLock::new(self.model));
 
         // Make service
         let service = NodeApi::new(model.clone());
@@ -67,7 +67,7 @@ impl NodeBuilder {
 
 pub struct Node {
     _event_handler: Option<Arc<dyn EventHandler>>,
-    model: Arc<Model>,
+    model: Arc<RwLock<Model>>,
     service: NodeApi,
 }
 
@@ -81,7 +81,7 @@ impl Node {
     }
 
     #[must_use]
-    pub fn model(&self) -> Arc<Model> {
+    pub fn model(&self) -> Arc<RwLock<Model>> {
         self.model.clone()
     }
 
@@ -169,7 +169,7 @@ impl Node {
 
                 // Get heartbeat endpoint from node id
                 let heartbeat_url = {
-                    let nodes = self.model.nodes().await;
+                    let nodes = &self.model.read().await.nodes;
                     let node_id = *nodes.iter().next().unwrap().0;
 
                     let base = &registry.url.join("v1.0/").unwrap();

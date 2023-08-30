@@ -8,6 +8,7 @@ use nmos_model::resource::{DeviceJson, FlowJson, NodeJson, ReceiverJson, SenderJ
 use nmos_model::version::is_04::V1_0;
 use nmos_model::version::APIVersion;
 use nmos_model::Model;
+use tokio::sync::RwLock;
 use uuid::Uuid;
 
 use super::ServiceError;
@@ -37,17 +38,17 @@ fn parse_api_version(api: &str) -> Result<APIVersion, ServiceError> {
 
 pub async fn get_self(
     Path(api): Path<String>,
-    Extension(model): Extension<Arc<Model>>,
+    Extension(model): Extension<Arc<RwLock<Model>>>,
 ) -> Result<Json<NodeJson>, ServiceError> {
     let api = parse_api_version(&api)?;
 
-    let nodes = model.nodes().await;
+    let model = model.read().await;
 
-    let node = nodes
-        .iter()
+    let node = model
+        .nodes
+        .values()
         .next()
         .expect("Missing self resource")
-        .1
         .to_json(&api);
 
     Ok(Json(node))
@@ -55,15 +56,16 @@ pub async fn get_self(
 
 pub async fn get_devices(
     Path(api): Path<String>,
-    Extension(model): Extension<Arc<Model>>,
+    Extension(model): Extension<Arc<RwLock<Model>>>,
 ) -> Result<Json<Vec<DeviceJson>>, ServiceError> {
     let api = parse_api_version(&api)?;
 
-    let devices = model.devices().await;
+    let model = model.read().await;
 
-    let devices: Vec<_> = devices
-        .iter()
-        .map(|(_, device)| device.to_json(&api))
+    let devices: Vec<_> = model
+        .devices
+        .values()
+        .map(|device| device.to_json(&api))
         .collect();
 
     Ok(Json(devices))
@@ -71,13 +73,13 @@ pub async fn get_devices(
 
 pub async fn get_device(
     Path((api, id)): Path<(String, Uuid)>,
-    Extension(model): Extension<Arc<Model>>,
+    Extension(model): Extension<Arc<RwLock<Model>>>,
 ) -> Result<Json<DeviceJson>, ServiceError> {
     let api = parse_api_version(&api)?;
 
-    let devices = model.devices().await;
+    let model = model.read().await;
 
-    let device = match devices.get(&id) {
+    let device = match model.devices.get(&id) {
         Some(d) => d.to_json(&api),
 
         None => {
@@ -93,15 +95,16 @@ pub async fn get_device(
 
 pub async fn get_receivers(
     Path(api): Path<String>,
-    Extension(model): Extension<Arc<Model>>,
+    Extension(model): Extension<Arc<RwLock<Model>>>,
 ) -> Result<Json<Vec<ReceiverJson>>, ServiceError> {
     let api = parse_api_version(&api)?;
 
-    let receivers = model.receivers().await;
+    let model = model.read().await;
 
-    let receivers: Vec<_> = receivers
-        .iter()
-        .map(|(_, receiver)| receiver.to_json(&api))
+    let receivers: Vec<_> = model
+        .receivers
+        .values()
+        .map(|receiver| receiver.to_json(&api))
         .collect();
 
     Ok(Json(receivers))
@@ -109,13 +112,13 @@ pub async fn get_receivers(
 
 pub async fn get_receiver(
     Path((api, id)): Path<(String, Uuid)>,
-    Extension(model): Extension<Arc<Model>>,
+    Extension(model): Extension<Arc<RwLock<Model>>>,
 ) -> Result<Json<ReceiverJson>, ServiceError> {
     let api = parse_api_version(&api)?;
 
-    let receivers = model.receivers().await;
+    let model = model.read().await;
 
-    let receiver = match receivers.get(&id) {
+    let receiver = match model.receivers.get(&id) {
         Some(r) => r.to_json(&api),
         None => {
             return Err(ServiceError::new(
@@ -130,15 +133,16 @@ pub async fn get_receiver(
 
 pub async fn get_senders(
     Path(api): Path<String>,
-    Extension(model): Extension<Arc<Model>>,
+    Extension(model): Extension<Arc<RwLock<Model>>>,
 ) -> Result<Json<Vec<SenderJson>>, ServiceError> {
     let api = parse_api_version(&api)?;
 
-    let senders = model.senders().await;
+    let model = model.read().await;
 
-    let senders: Vec<_> = senders
-        .iter()
-        .map(|(_, sender)| sender.to_json(&api))
+    let senders: Vec<_> = model
+        .senders
+        .values()
+        .map(|sender| sender.to_json(&api))
         .collect();
 
     Ok(Json(senders))
@@ -146,13 +150,13 @@ pub async fn get_senders(
 
 pub async fn get_sender(
     Path((api, id)): Path<(String, Uuid)>,
-    Extension(model): Extension<Arc<Model>>,
+    Extension(model): Extension<Arc<RwLock<Model>>>,
 ) -> Result<Json<SenderJson>, ServiceError> {
     let api = parse_api_version(&api)?;
 
-    let senders = model.senders().await;
+    let model = model.read().await;
 
-    let sender = match senders.get(&id) {
+    let sender = match model.senders.get(&id) {
         Some(s) => s.to_json(&api),
         None => {
             return Err(ServiceError::new(
@@ -167,15 +171,16 @@ pub async fn get_sender(
 
 pub async fn get_sources(
     Path(api): Path<String>,
-    Extension(model): Extension<Arc<Model>>,
+    Extension(model): Extension<Arc<RwLock<Model>>>,
 ) -> Result<Json<Vec<SourceJson>>, ServiceError> {
     let api = parse_api_version(&api)?;
 
-    let sources = model.sources().await;
+    let model = model.read().await;
 
-    let sources: Vec<_> = sources
-        .iter()
-        .map(|(_, source)| source.to_json(&api))
+    let sources: Vec<_> = model
+        .sources
+        .values()
+        .map(|source| source.to_json(&api))
         .collect();
 
     Ok(Json(sources))
@@ -183,13 +188,13 @@ pub async fn get_sources(
 
 pub async fn get_source(
     Path((api, id)): Path<(String, Uuid)>,
-    Extension(model): Extension<Arc<Model>>,
+    Extension(model): Extension<Arc<RwLock<Model>>>,
 ) -> Result<Json<SourceJson>, ServiceError> {
     let api = parse_api_version(&api)?;
 
-    let sources = model.sources().await;
+    let model = model.read().await;
 
-    let source = match sources.get(&id) {
+    let source = match model.sources.get(&id) {
         Some(s) => s.to_json(&api),
         None => {
             return Err(ServiceError::new(
@@ -204,26 +209,30 @@ pub async fn get_source(
 
 pub async fn get_flows(
     Path(api): Path<String>,
-    Extension(model): Extension<Arc<Model>>,
+    Extension(model): Extension<Arc<RwLock<Model>>>,
 ) -> Result<Json<Vec<FlowJson>>, ServiceError> {
     let api = parse_api_version(&api)?;
 
-    let flows = model.flows().await;
+    let model = model.read().await;
 
-    let flows: Vec<_> = flows.iter().map(|(_, flow)| flow.to_json(&api)).collect();
+    let flows: Vec<_> = model
+        .flows
+        .values()
+        .map(|flow| flow.to_json(&api))
+        .collect();
 
     Ok(Json(flows))
 }
 
 pub async fn get_flow(
     Path((api, id)): Path<(String, Uuid)>,
-    Extension(model): Extension<Arc<Model>>,
+    Extension(model): Extension<Arc<RwLock<Model>>>,
 ) -> Result<Json<FlowJson>, ServiceError> {
     let api = parse_api_version(&api)?;
 
-    let flows = model.flows().await;
+    let model = model.read().await;
 
-    let flow = match flows.get(&id) {
+    let flow = match model.flows.get(&id) {
         Some(f) => f.to_json(&api),
         None => {
             return Err(ServiceError::new(
