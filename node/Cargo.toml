@@ -10,7 +10,7 @@ rust-version = "1.56"
 
 [dependencies]
 async-trait = "0.1"
-axum = { version = "0.5", default-features = false, features = ["http1", "json", "original-uri", "tower-log"] }
+axum = { version = "0.6", default-features = false, features = ["http1", "json", "original-uri", "tower-log", "tokio"] }
 futures = "0.3"
 nmos-model = { path = "../model" }
 nmos-schema = { path = "../schema" }
@@ -19,11 +19,11 @@ serde = "1"
 serde_json = "1"
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync", "time"] }
 tower = { version = "0.4", features = ["make"] }
-tower-http = { version = "0.3", features = ["cors"] }
+tower-http = { version = "0.4", features = ["cors"] }
 tracing = { version = "0.1", features = ["log"] }
 uuid = { version = "1", features = ["serde"] }
-zeroconf = "0.10"
+zeroconf = "0.11"
 
 [dev-dependencies]
-gstreamer = "0.18"
+gstreamer = "0.21"
 tracing-subscriber = "0.3"

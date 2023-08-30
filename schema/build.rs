@@ -141,7 +141,7 @@ fn create_root_schema<P: AsRef<Path>>(path: P) -> Value {
 fn main() {
     // Fetch schemas from AMWA repository via submodules
     Command::new("git")
-        .args(&["submodule", "update", "--init"])
+        .args(["submodule", "update", "--init"])
         .status()
         .expect("Failed to update submodules");
 

@@ -9,8 +9,8 @@ use std::task::Context;
 use std::task::Poll;
 
 use axum::{
-    body::Body, extract::OriginalUri, handler::Handler, http::Request, http::StatusCode,
-    response::Response, routing::get, Extension, Json, Router,
+    body::Body, extract::OriginalUri, http::Request, http::StatusCode, response::Response,
+    routing::get, Extension, Json, Router,
 };
 use error::ServiceError;
 use futures::Future;
@@ -63,7 +63,7 @@ impl NodeApi {
             .route("/x-nmos/node/:api/sources/:id", get(get_source))
             .route("/x-nmos/node/:api/flows/", get(get_flows))
             .route("/x-nmos/node/:api/flows/:id", get(get_flow))
-            .fallback(fallback_handler.into_service())
+            .fallback(fallback_handler)
             .layer(Extension(model));
 
         Self { router }

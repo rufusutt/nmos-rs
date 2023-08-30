@@ -28,7 +28,7 @@ impl FromStr for APIVersion {
             None => panic!("Missing major version"),
         };
 
-        assert!(versions.next() == None);
+        assert!(versions.next().is_none());
 
         Ok(Self { major, minor })
     }
