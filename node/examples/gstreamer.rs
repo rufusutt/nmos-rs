@@ -7,15 +7,15 @@ use tracing_subscriber::FmtSubscriber;
 
 fn create_pipeline() -> Result<Pipeline, Box<dyn std::error::Error>> {
     // Create VP8 RTP video test pipeline
-    let pipeline = gst::Pipeline::new(None);
+    let pipeline = gst::Pipeline::default();
 
-    let src = gst::ElementFactory::make("videotestsrc", None)?;
-    let q1 = gst::ElementFactory::make("queue", None)?;
-    let enc = gst::ElementFactory::make("vp8enc", None)?;
-    let q2 = gst::ElementFactory::make("queue", None)?;
-    let pay = gst::ElementFactory::make("rtpvp8pay", None)?;
-    let rtpbin = gst::ElementFactory::make("rtpbin", None)?;
-    let sink = gst::ElementFactory::make("udpsink", None)?;
+    let src = gst::ElementFactory::make("videotestsrc").build()?;
+    let q1 = gst::ElementFactory::make("queue").build()?;
+    let enc = gst::ElementFactory::make("vp8enc").build()?;
+    let q2 = gst::ElementFactory::make("queue").build()?;
+    let pay = gst::ElementFactory::make("rtpvp8pay").build()?;
+    let rtpbin = gst::ElementFactory::make("rtpbin").build()?;
+    let sink = gst::ElementFactory::make("udpsink").build()?;
 
     pipeline.add_many(&[&src, &q1, &enc, &q2, &pay, &rtpbin, &sink])?;
 
@@ -117,14 +117,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
                 MessageView::StateChanged(state) => {
                     if let Some(element) = msg.src() {
-                        if element == pipeline && state.current() == gst::State::Playing {
+                        if element == &pipeline && state.current() == gst::State::Playing {
                             println!("Playing")
                         }
                     }
                 }
                 MessageView::StreamStatus(status) => {
                     if let Some(element) = msg.src() {
-                        if element == pipeline {
+                        if element == &pipeline {
                             println!("{:?}", status);
                         }
                     }
