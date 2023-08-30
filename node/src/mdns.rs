@@ -177,9 +177,13 @@ impl MdnsContext {
     }
 
     pub fn new(_config: &NmosMdnsConfig, tx: mpsc::UnboundedSender<NmosMdnsEvent>) -> MdnsContext {
+        // TODO: Select correct service to browse for
+        // Recent specs use the "_nmos-register._tcp" service,
+        // while v1.2 and below use "_nmos-registration._tcp".
+        let service_name = "nmos-registration";
+
         // Create registration browser
-        let mut register_browser =
-            MdnsBrowser::new(ServiceType::new("nmos-register", "tcp").unwrap());
+        let mut register_browser = MdnsBrowser::new(ServiceType::new(service_name, "tcp").unwrap());
 
         register_browser.set_context(Box::new(tx.clone()));
         register_browser.set_service_discovered_callback(Box::new(|r, c| {
