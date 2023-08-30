@@ -12,6 +12,7 @@ use axum::{
     body::Body, extract::OriginalUri, http::Request, http::StatusCode, response::Response,
     routing::get, Extension, Json, Router,
 };
+use axum_extra::routing::RouterExt;
 use error::ServiceError;
 use futures::Future;
 use nmos_model::Model;
@@ -38,10 +39,10 @@ impl NodeApi {
                 "/",
                 get(|| async { Json(json!(["x-manifest/", "x-nmos/"])) }),
             )
-            .route("/x-nmos/", get(|| async { Json(json!(["node/"])) }))
-            .route("/x-nmos/node/", get(|| async { Json(json!(["v1.0/"])) }))
-            .route(
-                "/x-nmos/node/v1.0/",
+            .route_with_tsr("/x-nmos", get(|| async { Json(json!(["node/"])) }))
+            .route_with_tsr("/x-nmos/node", get(|| async { Json(json!(["v1.0/"])) }))
+            .route_with_tsr(
+                "/x-nmos/node/v1.0",
                 get(|| async {
                     Json(json!([
                         "devices/",
@@ -53,16 +54,16 @@ impl NodeApi {
                     ]))
                 }),
             )
-            .route("/x-nmos/node/:api/self", get(get_self))
-            .route("/x-nmos/node/:api/devices/", get(get_devices))
+            .route_with_tsr("/x-nmos/node/:api/self", get(get_self))
+            .route_with_tsr("/x-nmos/node/:api/devices", get(get_devices))
             .route("/x-nmos/node/:api/devices/:id", get(get_device))
-            .route("/x-nmos/node/:api/receivers/", get(get_receivers))
+            .route_with_tsr("/x-nmos/node/:api/receivers", get(get_receivers))
             .route("/x-nmos/node/:api/receivers/:id", get(get_receiver))
-            .route("/x-nmos/node/:api/senders/", get(get_senders))
+            .route_with_tsr("/x-nmos/node/:api/senders", get(get_senders))
             .route("/x-nmos/node/:api/senders/:id", get(get_sender))
-            .route("/x-nmos/node/:api/sources/", get(get_sources))
+            .route_with_tsr("/x-nmos/node/:api/sources", get(get_sources))
             .route("/x-nmos/node/:api/sources/:id", get(get_source))
-            .route("/x-nmos/node/:api/flows/", get(get_flows))
+            .route_with_tsr("/x-nmos/node/:api/flows", get(get_flows))
             .route("/x-nmos/node/:api/flows/:id", get(get_flow))
             .fallback(fallback_handler)
             .layer(Extension(model));
