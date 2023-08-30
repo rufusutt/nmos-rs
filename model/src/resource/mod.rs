@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 pub use device::{Device, DeviceBuilder, DeviceJson, DeviceType};
 pub use flow::{Flow, FlowBuilder, FlowJson};
-pub use node::{Node, NodeBuilder, NodeJson};
+pub use node::{Node, NodeBuilder, NodeJson, NodeService};
 pub use receiver::{Receiver, ReceiverBuilder, ReceiverJson};
 pub use sender::{Sender, SenderBuilder, SenderJson};
 pub use source::{Source, SourceBuilder, SourceJson};
